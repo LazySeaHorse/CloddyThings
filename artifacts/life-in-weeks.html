@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life in Weeks</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f9fafb;
+            color: #111827;
+            line-height: 1.5;
+        }
+
+        .container {
+            min-height: 100vh;
+            padding: 24px;
+            padding-top: 80px;
+        }
+
+        .max-width-container {
+            max-width: 672px;
+            margin: 0 auto;
+        }
+
+        .page-title {
+            font-size: 2.25rem;
+            font-weight: 300;
+            color: #101827;
+            margin-bottom: 12px;
+        }
+
+        .page-subtitle {
+            color: #6b7280;
+            margin-bottom: 48px;
+            font-weight: 300;
+        }
+
+        .card {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            border: 1px solid #f3f4f6;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        }
+
+        .card-small {
+            padding: 32px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 300;
+            margin-bottom: 24px;
+            color: #101827;
+        }
+
+        .input-container {
+            max-width: 448px;
+        }
+
+        .date-input {
+            width: 100%;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-weight: 300;
+            font-size: 16px;
+            color: #101827;
+            transition: border-color 0.3s;
+        }
+
+        .date-input:focus {
+            outline: none;
+            border-color: #f97316;
+        }
+
+        .button {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 300;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .button-primary {
+            background-color: #101827;
+            color: white;
+        }
+
+        .button-primary:hover:not(:disabled) {
+            background-color: #f97316;
+        }
+
+        .button-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .button-secondary {
+            background-color: white;
+            color: #101827;
+            border: 1px solid #e5e7eb;
+            margin-top: 32px;
+            max-width: 448px;
+            margin-left: auto;
+            margin-right: auto;
+            display: block;
+        }
+
+        .button-secondary:hover {
+            border-color: #f97316;
+            color: #f97316;
+        }
+
+        .week-grid-container {
+            margin-top: 48px;
+        }
+
+        .week-row {
+            display: flex;
+        }
+
+        .week-cell {
+            width: 6px;
+            height: 6px;
+            margin: 2px;
+            transition: all 0.5s;
+            opacity: 0;
+            transform: scale(0);
+        }
+
+        .week-cell.past {
+            background-color: #101827;
+            border-radius: 50%;
+        }
+
+        .week-cell.current {
+            background-color: #f97316;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        .week-cell.future {
+            background-color: #e5e7eb;
+            border-radius: 2px;
+        }
+
+        .week-cell.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.7;
+            }
+        }
+
+        .hover-info {
+            margin-top: 24px;
+            font-size: 0.875rem;
+            color: #6b7280;
+            font-weight: 300;
+        }
+
+        .legend {
+            display: flex;
+            margin-top: 32px;
+            font-size: 0.875rem;
+            font-weight: 300;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 24px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+        }
+
+        .legend-dot.past {
+            background-color: #101827;
+            border-radius: 50%;
+        }
+
+        .legend-dot.current {
+            background-color: #f97316;
+            border-radius: 50%;
+            animation: pulse 1s infinite;
+        }
+
+        .legend-dot.future {
+            background-color: #e5e7eb;
+            border-radius: 2px;
+        }
+
+        .legend-text {
+            color: #6b7280;
+        }
+
+        .stats-section {
+            margin-top: 32px;
+        }
+
+        .stat-card {
+            margin-bottom: 16px;
+        }
+
+        .stat-content {
+            margin-top: 24px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+
+        .stat-icon {
+            width: 20px;
+            height: 20px;
+            margin-right: 12px;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+
+        .stat-text {
+            color: #6b7280;
+            font-weight: 300;
+            line-height: 1.75;
+        }
+
+        .stat-text.indented {
+            padding-left: 32px;
+        }
+
+        .highlight {
+            color: #f97316;
+            font-weight: 400;
+        }
+
+        .highlight-dark {
+            color: #101827;
+            font-weight: 400;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .animate-heart {
+            animation: pulse 1s infinite;
+        }
+
+        .animate-lungs {
+            animation: pulse 3s infinite;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="max-width-container">
+            <h1 class="page-title" id="pageTitle">Life in weeks</h1>
+            <p class="page-subtitle" id="pageSubtitle">A simple visualization to reflect on the passage of time</p>
+            
+            <!-- Step 1: Birth date input -->
+            <div id="step1" class="card input-container">
+                <h2 class="card-title" id="birthDateQuestion">Enter a birthdate</h2>
+                <div>
+                    <input type="date" class="date-input" id="birthdateInput" required>
+                    <button class="button button-primary" id="visualizeButton" disabled>
+                        Visualize your time
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Visualization -->
+            <div id="step2" class="hidden">
+                <div class="card week-grid-container">
+                    <h2 class="card-title" id="lifeInWeeksTitle">Your life in weeks</h2>
+                    <div id="weekGrid"></div>
+                    <div id="hoverInfo" class="hover-info hidden"></div>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-dot past"></div>
+                            <span class="legend-text" id="legendPast">Past</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot current"></div>
+                            <span class="legend-text" id="legendPresent">Present</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot future"></div>
+                            <span class="legend-text" id="legendFuture">Future</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="statsSection" class="stats-section"></div>
+
+                <button class="button button-secondary" id="resetButton">
+                    Start over
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Translations
+        const TRANSLATIONS = {
+            "en-US": {
+                "pageTitle": "Life in weeks",
+                "pageSubtitle": "A simple visualization to reflect on the passage of time",
+                "birthDateQuestion": "Enter a birthdate",
+                "visualizeButton": "Visualize your time",
+                "startOverButton": "Start over",
+                "lifeInWeeksTitle": "Your life in weeks",
+                "weekHoverPast": " A week from your past",
+                "weekHoverCurrent": " Your current week",
+                "weekHoverFuture": " A week in your potential future",
+                "legendPast": "Past",
+                "legendPresent": "Present",
+                "legendFuture": "Future",
+                "lifeHighlightsTitle": "Life highlights",
+                "lifeHighlightsWeeks": "You've lived",
+                "lifeHighlightsWeeksEnd": "weeks, which is",
+                "lifeHighlightsPercent": "of a full life.",
+                "lifeHighlightsDays": "That's",
+                "lifeHighlightsDaysEnd": "days of experience and approximately",
+                "lifeHighlightsSeasonsEnd": "seasons observed.",
+                "lifeHighlightsHeartbeats": "Your heart has beaten approximately",
+                "lifeHighlightsHeartbeatsEnd": "times.",
+                "lifeHighlightsBreaths": "You've taken around",
+                "lifeHighlightsBreathsMiddle": "breaths and slept about",
+                "lifeHighlightsBreathsEnd": "hours.",
+                "societalContextTitle": "Societal context",
+                "societalPopulation": "During your lifetime, humanity's population has grown from",
+                "societalPopulationEnd": "to over",
+                "societalPopulationFinal": "billion people.",
+                "societalMeetings": "The average person will meet around",
+                "societalMeetingsMiddle": "people in their lifetime. You've likely already met approximately",
+                "societalMeetingsEnd": "individuals.",
+                "societalBirthsDeaths": "Since your birth, humanity has collectively experienced approximately",
+                "societalBirthsMiddle": "births and",
+                "societalDeathsEnd": "deaths.",
+                "cosmicPerspectiveTitle": "Cosmic perspective",
+                "cosmicEarthTravel": "Since your birth, Earth has traveled approximately",
+                "cosmicEarthTravelEnd": "kilometers through space around the Sun.",
+                "cosmicUniverse": "The observable universe is about",
+                "cosmicUniverseMiddle": "billion light-years across, meaning light takes",
+                "cosmicUniverseMiddle2": "billion years to cross it. Your entire lifespan is just",
+                "cosmicUniverseEnd": "of the universe's age.",
+                "cosmicSolarSystem": "During your lifetime, our solar system has moved about",
+                "cosmicSolarSystemEnd": "kilometers through the Milky Way galaxy.",
+                "naturalWorldTitle": "Natural world",
+                "naturalLunarCycles": "You've experienced approximately",
+                "naturalLunarMiddle": "lunar cycles and",
+                "naturalLunarEnd": "trips around the Sun.",
+                "naturalSequoia": "A giant sequoia tree can live over 3,000 years. Your current age is",
+                "naturalSequoiaEnd": "of its potential lifespan.",
+                "naturalCells": "During your lifetime, your body has replaced most of its cells several times. You are not made of the same atoms you were born with."
+            },
+            "es-ES": {
+                "pageTitle": "La vida en semanas",
+                "pageSubtitle": "Una visualización simple para reflexionar sobre el paso del tiempo",
+                "birthDateQuestion": "Ingresa una fecha de nacimiento",
+                "visualizeButton": "Visualizar tu tiempo",
+                "startOverButton": "Empezar de nuevo",
+                "lifeInWeeksTitle": "Tu vida en semanas",
+                "weekHoverPast": " Una semana de tu pasado",
+                "weekHoverCurrent": " Tu semana actual",
+                "weekHoverFuture": " Una semana en tu futuro potencial",
+                "legendPast": "Pasado",
+                "legendPresent": "Presente",
+                "legendFuture": "Futuro",
+                "lifeHighlightsTitle": "Aspectos destacados de la vida",
+                "lifeHighlightsWeeks": "Has vivido",
+                "lifeHighlightsWeeksEnd": "semanas, que es el",
+                "lifeHighlightsPercent": "de una vida completa.",
+                "lifeHighlightsDays": "Eso son",
+                "lifeHighlightsDaysEnd": "días de experiencia y aproximadamente",
+                "lifeHighlightsSeasonsEnd": "estaciones observadas.",
+                "lifeHighlightsHeartbeats": "Tu corazón ha latido aproximadamente",
+                "lifeHighlightsHeartbeatsEnd": "veces.",
+                "lifeHighlightsBreaths": "Has tomado alrededor de",
+                "lifeHighlightsBreathsMiddle": "respiraciones y has dormido aproximadamente",
+                "lifeHighlightsBreathsEnd": "horas.",
+                "societalContextTitle": "Contexto social",
+                "societalPopulation": "Durante tu vida, la población de la humanidad ha crecido de",
+                "societalPopulationEnd": "a más de",
+                "societalPopulationFinal": "mil millones de personas.",
+                "societalMeetings": "La persona promedio conocerá alrededor de",
+                "societalMeetingsMiddle": "personas en su vida. Probablemente ya has conocido aproximadamente",
+                "societalMeetingsEnd": "individuos.",
+                "societalBirthsDeaths": "Desde tu nacimiento, la humanidad ha experimentado colectivamente aproximadamente",
+                "societalBirthsMiddle": "nacimientos y",
+                "societalDeathsEnd": "muertes.",
+                "cosmicPerspectiveTitle": "Perspectiva cósmica",
+                "cosmicEarthTravel": "Desde tu nacimiento, la Tierra ha viajado aproximadamente",
+                "cosmicEarthTravelEnd": "kilómetros a través del espacio alrededor del Sol.",
+                "cosmicUniverse": "El universo observable tiene aproximadamente",
+                "cosmicUniverseMiddle": "mil millones de años luz de diámetro, lo que significa que la luz tarda",
+                "cosmicUniverseMiddle2": "mil millones de años en cruzarlo. Toda tu vida es solo el",
+                "cosmicUniverseEnd": "de la edad del universo.",
+                "cosmicSolarSystem": "Durante tu vida, nuestro sistema solar se ha movido aproximadamente",
+                "cosmicSolarSystemEnd": "kilómetros a través de la galaxia Vía Láctea.",
+                "naturalWorldTitle": "Mundo natural",
+                "naturalLunarCycles": "Has experimentado aproximadamente",
+                "naturalLunarMiddle": "ciclos lunares y",
+                "naturalLunarEnd": "viajes alrededor del Sol.",
+                "naturalSequoia": "Una secuoya gigante puede vivir más de 3,000 años. Tu edad actual es el",
+                "naturalSequoiaEnd": "de su vida potencial.",
+                "naturalCells": "Durante tu vida, tu cuerpo ha reemplazado la mayoría de sus células varias veces. No estás hecho de los mismos átomos con los que naciste."
+            }
+        };
+
+        // Locale detection
+        const browserLocale = navigator.languages?.[0] || navigator.language || 'en-US';
+        const findMatchingLocale = (locale) => {
+            if (TRANSLATIONS[locale]) return locale;
+            const lang = locale.split('-')[0];
+            const match = Object.keys(TRANSLATIONS).find(key => key.startsWith(lang + '-'));
+            return match || 'en-US';
+        };
+        const locale = findMatchingLocale(browserLocale);
+        const t = (key) => TRANSLATIONS[locale]?.[key] || TRANSLATIONS['en-US'][key] || key;
+
+        // State
+        let stats = null;
+        let mounted = false;
+
+        // Elements
+        const step1 = document.getElementById('step1');
+        const step2 = document.getElementById('step2');
+        const birthdateInput = document.getElementById('birthdateInput');
+        const visualizeButton = document.getElementById('visualizeButton');
+        const resetButton = document.getElementById('resetButton');
+        const weekGrid = document.getElementById('weekGrid');
+        const hoverInfo = document.getElementById('hoverInfo');
+        const statsSection = document.getElementById('statsSection');
+
+        // Initialize translations
+        document.getElementById('pageTitle').textContent = t('pageTitle');
+        document.getElementById('pageSubtitle').textContent = t('pageSubtitle');
+        document.getElementById('birthDateQuestion').textContent = t('birthDateQuestion');
+        document.getElementById('visualizeButton').textContent = t('visualizeButton');
+        document.getElementById('resetButton').textContent = t('startOverButton');
+        document.getElementById('lifeInWeeksTitle').textContent = t('lifeInWeeksTitle');
+        document.getElementById('legendPast').textContent = t('legendPast');
+        document.getElementById('legendPresent').textContent = t('legendPresent');
+        document.getElementById('legendFuture').textContent = t('legendFuture');
+
+        // Helper functions
+        function getFormattedNumber(num) {
+            return new Intl.NumberFormat().format(num);
+        }
+
+        function calculateStats(date) {
+            const birthDate = new Date(date);
+            const today = new Date();
+            const birthYear = birthDate.getFullYear();
+            
+            const msInWeek = 1000 * 60 * 60 * 24 * 7;
+            const weeksLived = Math.floor((today - birthDate) / msInWeek);
+            
+            const totalWeeks = 4160;
+            const weeksRemaining = totalWeeks - weeksLived;
+            const percentageLived = Math.round((weeksLived / totalWeeks) * 100);
+            
+            const msInDay = 1000 * 60 * 60 * 24;
+            const daysLived = Math.floor((today - birthDate) / msInDay);
+            
+            const hoursSlept = Math.floor(daysLived * 8);
+            const heartbeats = Math.floor(daysLived * 24 * 60 * 70);
+            const breaths = Math.floor(daysLived * 24 * 60 * 16);
+            const seasons = Math.floor(daysLived / 91.25);
+            
+            return {
+                weeksLived,
+                totalWeeks,
+                weeksRemaining,
+                percentageLived,
+                daysLived,
+                hoursSlept,
+                heartbeats,
+                breaths,
+                seasons,
+                birthYear
+            };
+        }
+
+        function getPopulationAtYear(year) {
+            const populationData = {
+                1950: 2.5,
+                1960: 3.0,
+                1970: 3.7,
+                1980: 4.4,
+                1990: 5.3,
+                2000: 6.1,
+                2010: 6.9,
+                2020: 7.8,
+                2025: 8.1
+            };
+            
+            const years = Object.keys(populationData).map(Number);
+            const closestYear = years.reduce((prev, curr) => 
+                Math.abs(curr - year) < Math.abs(prev - year) ? curr : prev
+            );
+            
+            return Math.round(populationData[closestYear] * 1000000000);
+        }
+
+        function createIcon(type, options = {}) {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.classList.add('stat-icon');
+            svg.setAttribute('viewBox', '0 0 24 24');
+            svg.setAttribute('fill', 'none');
+
+            if (type === 'heart') {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z');
+                path.setAttribute('fill', '#F97315');
+                path.classList.add('animate-heart');
+                svg.appendChild(path);
+            } else if (type === 'tree') {
+                const bgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                bgPath.setAttribute('d', 'M12 2L8 8h3v4H7l-3 6h7v4h2v-4h7l-3-6h-4V8h3l-4-6z');
+                bgPath.setAttribute('fill', '#101827');
+                bgPath.setAttribute('opacity', '0.2');
+                svg.appendChild(bgPath);
+
+                const fgPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                fgPath.setAttribute('d', 'M12 2L8 8h3v4H7l-3 6h7v4h2v-4h7l-3-6h-4V8h3l-4-6z');
+                fgPath.setAttribute('fill', '#F97315');
+                fgPath.style.clipPath = `inset(${100 - (options.percentage || 0)}% 0 0 0)`;
+                fgPath.style.transition = 'clip-path 2s ease-out';
+                svg.appendChild(fgPath);
+            } else if (type === 'lungs') {
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M8 5c-2 0-3 1-3 3v5c0 3 2 6 4 6s3-1 3-3V5H8zm8 0h-4v11c0 2 1 3 3 3s4-3 4-6V8c0-2-1-3-3-3z');
+                path.setAttribute('fill', '#F97315');
+                path.classList.add('animate-lungs');
+                svg.appendChild(path);
+            } else if (type === 'calendar') {
+                const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                rect.setAttribute('x', '3');
+                rect.setAttribute('y', '4');
+                rect.setAttribute('width', '18');
+                rect.setAttribute('height', '18');
+                rect.setAttribute('rx', '2');
+                rect.setAttribute('stroke', '#F97315');
+                rect.setAttribute('stroke-width', '2');
+                rect.setAttribute('fill', 'none');
+                svg.appendChild(rect);
+
+                const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                path.setAttribute('d', 'M16 2v4M8 2v4M3 10h18');
+                path.setAttribute('stroke', '#F97315');
+                path.setAttribute('stroke-width', '2');
+                path.setAttribute('stroke-linecap', 'round');
+                svg.appendChild(path);
+            }
+
+            return svg;
+        }
+
+        function renderWeekGrid() {
+            weekGrid.innerHTML = '';
+            const weeksPerRow = 52;
+            const totalRows = Math.ceil(stats.totalWeeks / weeksPerRow);
+            
+            for (let row = 0; row < totalRows; row++) {
+                const weekRow = document.createElement('div');
+                weekRow.className = 'week-row';
+                
+                for (let col = 0; col < weeksPerRow; col++) {
+                    const weekNumber = row * weeksPerRow + col;
+                    if (weekNumber < stats.totalWeeks) {
+                        const weekCell = document.createElement('div');
+                        weekCell.className = 'week-cell';
+                        
+                        if (weekNumber < stats.weeksLived) {
+                            weekCell.classList.add('past');
+                        } else if (weekNumber === stats.weeksLived) {
+                            weekCell.classList.add('current');
+                        } else {
+                            weekCell.classList.add('future');
+                        }
+                        
+                        weekCell.style.transitionDelay = `${(row * 52 + col) * 0.5}ms`;
+                        
+                        weekCell.addEventListener('mouseenter', () => {
+                            hoverInfo.textContent = `Week ${weekNumber + 1}: ${
+                                weekNumber < stats.weeksLived ? 
+                                t('weekHoverPast') : 
+                                weekNumber === stats.weeksLived ? 
+                                t('weekHoverCurrent') : 
+                                t('weekHoverFuture')
+                            }`;
+                            hoverInfo.classList.remove('hidden');
+                        });
+                        
+                        weekCell.addEventListener('mouseleave', () => {
+                            hoverInfo.classList.add('hidden');
+                        });
+                        
+                        weekRow.appendChild(weekCell);
+                    }
+                }
+                
+                weekGrid.appendChild(weekRow);
+            }
+            
+            // Trigger animation
+            setTimeout(() => {
+                const cells = weekGrid.querySelectorAll('.week-cell');
+                cells.forEach(cell => cell.classList.add('visible'));
+            }, 100);
+        }
+
+        function renderStats() {
+            const sections = [
+                {
+                    title: t('lifeHighlightsTitle'),
+                    content: `
+                        <div class="stat-item">
+                            ${createIcon('calendar').outerHTML}
+                            <p class="stat-text">
+                                ${t('lifeHighlightsWeeks')} <span class="highlight">${getFormattedNumber(stats.weeksLived)}</span> ${t('lifeHighlightsWeeksEnd')} <span class="highlight">${stats.percentageLived}%</span> ${t('lifeHighlightsPercent')}
+                            </p>
+                        </div>
+                        <p class="stat-text indented">
+                            ${t('lifeHighlightsDays')} <span class="highlight-dark">${getFormattedNumber(stats.daysLived)}</span> ${t('lifeHighlightsDaysEnd')} <span class="highlight-dark">${getFormattedNumber(stats.seasons)}</span> ${t('lifeHighlightsSeasonsEnd')}
+                        </p>
+                        <div class="stat-item">
+                            ${createIcon('heart').outerHTML}
+                            <p class="stat-text">
+                                ${t('lifeHighlightsHeartbeats')} <span class="highlight">${getFormattedNumber(stats.heartbeats)}</span> ${t('lifeHighlightsHeartbeatsEnd')}
+                            </p>
+                        </div>
+                        <div class="stat-item">
+                            ${createIcon('lungs').outerHTML}
+                            <p class="stat-text">
+                                ${t('lifeHighlightsBreaths')} <span class="highlight-dark">${getFormattedNumber(stats.breaths)}</span> ${t('lifeHighlightsBreathsMiddle')} <span class="highlight-dark">${getFormattedNumber(stats.hoursSlept)}</span> ${t('lifeHighlightsBreathsEnd')}
+                            </p>
+                        </div>
+                    `
+                },
+                {
+                    title: t('societalContextTitle'),
+                    content: `
+                        <p class="stat-text" style="margin-bottom: 16px;">
+                            ${t('societalPopulation')} <span class="highlight-dark">${getFormattedNumber(getPopulationAtYear(stats.birthYear))}</span> ${t('societalPopulationEnd')} <span class="highlight">8</span> ${t('societalPopulationFinal')}
+                        </p>
+                        <p class="stat-text" style="margin-bottom: 16px;">
+                            ${t('societalMeetings')} <span class="highlight-dark">80,000</span> ${t('societalMeetingsMiddle')} <span class="highlight">${getFormattedNumber(Math.round(80000 * (stats.percentageLived/100)))}</span> ${t('societalMeetingsEnd')}
+                        </p>
+                        <p class="stat-text">
+                            ${t('societalBirthsDeaths')} <span class="highlight-dark">${getFormattedNumber(Math.round(stats.daysLived * 385000))}</span> ${t('societalBirthsMiddle')} <span class="highlight-dark">${getFormattedNumber(Math.round(stats.daysLived * 166000))}</span> ${t('societalDeathsEnd')}
+                        </p>
+                    `
+                },
+                {
+                    title: t('cosmicPerspectiveTitle'),
+                    content: `
+                        <p class="stat-text" style="margin-bottom: 16px;">
+                            ${t('cosmicEarthTravel')} <span class="highlight">${getFormattedNumber(Math.round(stats.daysLived * 1.6 * 1000000))}</span> ${t('cosmicEarthTravelEnd')}
+                        </p>
+                        <p class="stat-text" style="margin-bottom: 16px;">
+                            ${t('cosmicUniverse')} <span class="highlight-dark">93</span> ${t('cosmicUniverseMiddle')} <span class="highlight-dark">93</span> ${t('cosmicUniverseMiddle2')} <span class="highlight">${(80/13800000000 * 100).toFixed(10)}%</span> ${t('cosmicUniverseEnd')}
+                        </p>
+                        <p class="stat-text">
+                            ${t('cosmicSolarSystem')} <span class="highlight-dark">${getFormattedNumber(Math.round(stats.daysLived * 24 * 828000))}</span> ${t('cosmicSolarSystemEnd')}
+                        </p>
+                    `
+                },
+                {
+                    title: t('naturalWorldTitle'),
+                    content: `
+                        <p class="stat-text" style="margin-bottom: 16px;">
+                            ${t('naturalLunarCycles')} <span class="highlight-dark">${getFormattedNumber(Math.round(stats.daysLived / 29.53))}</span> ${t('naturalLunarMiddle')} <span class="highlight">${getFormattedNumber(Math.floor(stats.daysLived / 365.25))}</span> ${t('naturalLunarEnd')}
+                        </p>
+                        <div class="stat-item">
+                            ${createIcon('tree', { percentage: ((stats.daysLived / 365.25) / 3000 * 100) }).outerHTML}
+                            <p class="stat-text">
+                                ${t('naturalSequoia')} <span class="highlight">${((stats.daysLived / 365.25) / 3000 * 100).toFixed(2)}%</span> ${t('naturalSequoiaEnd')}
+                            </p>
+                        </div>
+                        <p class="stat-text indented">
+                            ${t('naturalCells')}
+                        </p>
+                    `
+                }
+            ];
+
+            statsSection.innerHTML = sections.map(section => `
+                <div class="card card-small stat-card">
+                    <h2 class="card-title">${section.title}</h2>
+                    <div class="stat-content">
+                        ${section.content}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Event listeners
+        birthdateInput.addEventListener('input', (e) => {
+            visualizeButton.disabled = !e.target.value;
+        });
+
+        visualizeButton.addEventListener('click', () => {
+            stats = calculateStats(birthdateInput.value);
+            step1.classList.add('hidden');
+            step2.classList.remove('hidden');
+            mounted = true;
+            renderWeekGrid();
+            renderStats();
+        });
+
+        resetButton.addEventListener('click', () => {
+            birthdateInput.value = '';
+            visualizeButton.disabled = true;
+            step1.classList.remove('hidden');
+            step2.classList.add('hidden');
+            stats = null;
+            mounted = false;
+            weekGrid.innerHTML = '';
+            statsSection.innerHTML = '';
+            hoverInfo.classList.add('hidden');
+        });
+    </script>
+</body>
+</html>

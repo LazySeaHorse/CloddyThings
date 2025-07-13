@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude Artifacts Collection</title>
+  <meta name="description" content="A sleek, high-tech gallery entrance to Claude artifacts. Inspired by Dieter Rams and Teenage Engineering." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>
+    :root {
+      --accent: #18181b; /* black */
+      --bg: #f8f9fa;
+      --card-bg: #fff;
+      --text: #18181b;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 2px 16px 0 rgba(24,24,27,0.06);
+      --radius: 14px;
+      --transition: 0.18s cubic-bezier(.4,0,.2,1);
+    }
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+      font-size: 17px;
+      letter-spacing: 0.01em;
+      min-height: 100vh;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      padding: 2.5rem 0 1.2rem 0;
+      text-align: left;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .title {
+      font-size: 2.1rem;
+      font-weight: 300;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+      text-transform: uppercase;
+      text-align: left;
+      font-family: inherit;
+    }
+    .subtitle {
+      color: var(--muted);
+      font-size: 1rem;
+      font-weight: 300;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      text-align: left;
+      font-family: inherit;
+      letter-spacing: 0.08em;
+    }
+    .header-divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0 auto 2.2rem auto;
+      max-width: 1200px;
+      width: 100%;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 0.7rem 2rem 0.7rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.1rem;
+      width: 100%;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      padding: 1.3rem 1rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 180px;
+      transition: box-shadow var(--transition), transform var(--transition);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .card:hover {
+      box-shadow: 0 6px 32px 0 rgba(24,24,27,0.10), var(--shadow);
+      transform: translateY(-2px) scale(1.01);
+      border-color: var(--accent);
+    }
+    .card-title {
+      font-size: 1.08rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--text);
+      letter-spacing: 0.01em;
+      text-transform: none;
+    }
+    .card-desc {
+      color: var(--muted);
+      font-size: 0.97rem;
+      margin-bottom: 0.8rem;
+      flex: 1;
+    }
+    .tags {
+      display: flex;
+      gap: 0.4rem;
+      margin-bottom: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .tag {
+      background: #f3f4f6;
+      color: var(--accent);
+      font-size: 0.78rem;
+      font-weight: 300;
+      border-radius: 999px;
+      padding: 0.32em 1.25em;
+      letter-spacing: 0.08em;
+      border: none;
+      margin: 0;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+    @media (max-width: 700px) {
+      .grid {
+        grid-template-columns: 1fr;
+        gap: 0.7rem;
+      }
+      .card {
+        padding: 0.9rem 0.7rem 0.7rem 0.7rem;
+        min-height: 120px;
+      }
+      .title {
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="title">Claude Artifacts Collection</div>
+    <div class="subtitle">A curated gallery of creative, musical, and productivity tools</div>
+    <hr class="header-divider" />
+  </header>
+  <main>
+    <div class="grid">
+      <!-- Word Fusion Ideas -->
+      <a href="artifacts/word_fusion_ideas.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Word Fusion Ideas</div>
+          <div class="card-desc">Creative idea generator that fuses two random words to spark new concepts and projects.</div>
+          <div class="tags">
+            <span class="tag">Creative</span>
+            <span class="tag">Productivity</span>
+          </div>
+        </div>
+      </a>
+      <!-- Slideshow Presentation -->
+      <a href="artifacts/slideshow-presentation.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Slideshow Presentation</div>
+          <div class="card-desc">Minimalist, PowerPoint-alternative presentation tool for creating and displaying slideshows.</div>
+          <div class="tags">
+            <span class="tag">Productivity</span>
+            <span class="tag">Creative</span>
+          </div>
+        </div>
+      </a>
+      <!-- Life in Weeks -->
+      <a href="artifacts/life-in-weeks.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Life in Weeks</div>
+          <div class="card-desc">Personal time visualization tool that maps your life week by week for reflection and planning.</div>
+          <div class="tags">
+            <span class="tag">Life</span>
+            <span class="tag">Productivity</span>
+          </div>
+        </div>
+      </a>
+      <!-- Keyboard MIDI Player -->
+      <a href="artifacts/keyboard-mini-player.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Keyboard MIDI Player</div>
+          <div class="card-desc">Interactive piano instrument playable with your computer keyboard, supporting MIDI output.</div>
+          <div class="tags">
+            <span class="tag">Music</span>
+            <span class="tag">Creative</span>
+          </div>
+        </div>
+      </a>
+      <!-- Drum Machine -->
+      <a href="artifacts/drum-machine.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Drum Machine</div>
+          <div class="card-desc">AI-powered rhythm sequencer for creating and experimenting with drum patterns and beats.</div>
+          <div class="tags">
+            <span class="tag">Music</span>
+            <span class="tag">AI</span>
+          </div>
+        </div>
+      </a>
+      <!-- Text Editor -->
+      <a href="artifacts/text-editor.html" target="_blank" rel="noopener" style="text-decoration:none; color:inherit;">
+        <div class="card">
+          <div class="card-title">Text Editor</div>
+          <div class="card-desc">Advanced text editor with AI-powered suggestions and a clean, distraction-free interface.</div>
+          <div class="tags">
+            <span class="tag">Productivity</span>
+            <span class="tag">AI</span>
+          </div>
+        </div>
+      </a>
+    </div>
+  </main>
+</body>
+</html> 

@@ -241,7 +241,7 @@
                                                 className={`absolute w-9 h-32 bg-gradient-to-b from-black to-gray-800 border border-gray-900 rounded-b-xl z-10 cursor-pointer shadow-[0_4px_16px_0_rgba(0,0,0,0.15)] transition-all duration-75 select-none
                                                     ${activeKeys.has(pianoKey.key) ? 'bg-cyan-500 border-cyan-700 scale-95 shadow-inner' : 'hover:bg-gray-900'}
                                                 `}
-                                                style={{ left: `${getBlackKeyPosition(pianoKey.note)}px` }}
+                                                style={{ left: `${getBlackKeyPosition(pianoKey.note)}px`, top: 33 }}
                                                 onMouseDown={() => handleMouseDown(pianoKey.key)}
                                                 onMouseUp={() => handleMouseUp(pianoKey.key)}
                                                 onMouseLeave={() => handleMouseUp(pianoKey.key)}

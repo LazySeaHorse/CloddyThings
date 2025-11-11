@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Cargo Problem Solver</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Courier New', monospace;
+            background: #f5f5f5;
+            color: #1a1a1a;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            grid-template-rows: 60px 1fr 80px;
+            height: 100vh;
+            gap: 1px;
+            background: #e0e0e0;
+        }
+
+        header {
+            grid-column: 1 / -1;
+            background: #fff;
+            padding: 20px 30px;
+            border-bottom: 1px solid #d0d0d0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 14px;
+            font-weight: 400;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #1a1a1a;
+        }
+
+        .step-indicator {
+            font-size: 12px;
+            color: #FF6B00;
+            font-weight: 500;
+        }
+
+        .state-graph {
+            background: #fafafa;
+            padding: 40px;
+            overflow: auto;
+            position: relative;
+        }
+
+        .state-panel {
+            background: #fff;
+            padding: 30px;
+            border-left: 1px solid #d0d0d0;
+            overflow-y: auto;
+        }
+
+        .controls {
+            grid-column: 1 / -1;
+            background: #fff;
+            border-top: 1px solid #d0d0d0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        button {
+            background: #fff;
+            color: #1a1a1a;
+            border: 1px solid #d0d0d0;
+            padding: 12px 30px;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #FF6B00;
+            color: #fff;
+            border-color: #FF6B00;
+        }
+
+        button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .graph-container {
+            min-width: max-content;
+            position: relative;
+        }
+
+        .state-node {
+            background: #fff;
+            border: 2px solid #d0d0d0;
+            padding: 12px 16px;
+            min-width: 180px;
+            display: inline-block;
+            position: absolute;
+            transition: all 0.3s;
+            cursor: pointer;
+            font-size: 10px;
+            line-height: 1.6;
+        }
+
+        .state-node:hover {
+            border-color: #999;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .state-node.solution-path {
+            border-color: #FFB366;
+            background: #FFF9F5;
+        }
+
+        .state-node.active {
+            border-color: #FF6B00;
+            background: #FFF4EB;
+            box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+            border-width: 2px;
+        }
+
+        .state-node.goal {
+            border-color: #4CAF50;
+            background: #F1F8F4;
+        }
+
+        .state-node.goal.active {
+            border-color: #4CAF50;
+            background: #E8F5E9;
+        }
+
+        .node-id {
+            font-size: 9px;
+            color: #999;
+            margin-bottom: 6px;
+            letter-spacing: 1px;
+        }
+
+        .node-content {
+            font-size: 10px;
+            color: #333;
+        }
+
+        .node-location {
+            margin: 2px 0;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .state-node {
+            z-index: 1;
+        }
+
+        line {
+            stroke: #d0d0d0;
+            stroke-width: 2;
+        }
+
+        line.solution-path {
+            stroke: #FFB366;
+            stroke-width: 3;
+        }
+
+        line.active-edge {
+            stroke: #FF6B00;
+            stroke-width: 3;
+        }
+
+        .edge-label {
+            font-size: 8px;
+            fill: #666;
+            pointer-events: none;
+        }
+
+        .location-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .airport-box {
+            background: #fafafa;
+            border: 1px solid #d0d0d0;
+            padding: 20px;
+            min-height: 200px;
+        }
+
+        .airport-name {
+            font-size: 12px;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            color: #FF6B00;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .entity {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            padding: 10px;
+            margin: 8px 0;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .entity-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .cargo-icon::before { content: '■'; color: #FF6B00; }
+        .plane-icon::before { content: '✈'; color: #2196F3; }
+
+        .nested-cargo {
+            margin-left: 30px;
+            margin-top: 5px;
+            font-size: 10px;
+            color: #666;
+        }
+
+        .section-title {
+            font-size: 10px;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: #999;
+            margin-bottom: 15px;
+            margin-top: 20px;
+        }
+
+        .goal-status {
+            background: #fafafa;
+            border: 1px solid #d0d0d0;
+            padding: 15px;
+            font-size: 11px;
+            margin-top: 20px;
+        }
+
+        .goal-status.achieved {
+            border-color: #4CAF50;
+            color: #2E7D32;
+            background: #F1F8F4;
+        }
+
+        .legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+            font-size: 9px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 20px;
+            height: 20px;
+            border: 2px solid;
+        }
+
+        .legend-box.current { border-color: #FF6B00; background: #FFF4EB; }
+        .legend-box.path { border-color: #FFB366; background: #FFF9F5; }
+        .legend-box.other { border-color: #d0d0d0; background: #fff; }
+        .legend-box.goal-leg { border-color: #4CAF50; background: #F1F8F4; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .entity {
+            animation: fadeIn 0.3s ease;
+        }
+
+        marker {
+            fill: #d0d0d0;
+        }
+
+        marker.solution {
+            fill: #FFB366;
+        }
+
+        marker.active {
+            fill: #FF6B00;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Air Cargo State Space</h1>
+            <div class="step-indicator">
+                Step <span id="currentStep">0</span> / <span id="totalSteps">6</span>
+            </div>
+        </header>
+
+        <div class="state-graph" id="stateGraph">
+            <div class="graph-container" id="graphContainer">
+                <svg id="edgesSvg"></svg>
+                <!-- State nodes will be generated here -->
+            </div>
+        </div>
+
+        <div class="state-panel">
+            <div class="section-title">Current State</div>
+            <div class="location-grid" id="locationGrid">
+                <!-- Airports will be rendered here -->
+            </div>
+
+            <div class="section-title">Goal</div>
+            <div class="goal-status" id="goalStatus">
+                <div>C1 → JFK</div>
+                <div>C2 → SFO</div>
+            </div>
+
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box current"></div>
+                    <span>Current</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box path"></div>
+                    <span>Solution</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box goal-leg"></div>
+                    <span>Goal</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box other"></div>
+                    <span>Other</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="prevBtn">← Previous</button>
+            <button id="resetBtn">Reset</button>
+            <button id="nextBtn">Next →</button>
+        </div>
+    </div>
+
+    <script>
+        // Generate comprehensive state space
+        const stateSpace = [
+            // Layer 0 - Initial state
+            { id: 'S0', layer: 0, x: 600, state: { SFO: {planes: ['P1'], cargo: ['C1']}, JFK: {planes: ['P2'], cargo: ['C2']}, inPlane: {} }, solutionPath: true, solutionStep: 0 },
+            
+            // Layer 1 - After first action
+            { id: 'S1', layer: 1, x: 300, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: ['C2']}, inPlane: {P1: ['C1']} }, solutionPath: true, solutionStep: 1 },
+            { id: 'S1b', layer: 1, x: 600, state: { SFO: {planes: [], cargo: ['C1']}, JFK: {planes: ['P1', 'P2'], cargo: ['C2']}, inPlane: {} } },
+            { id: 'S1c', layer: 1, x: 900, state: { SFO: {planes: ['P1', 'P2'], cargo: ['C1']}, JFK: {planes: [], cargo: ['C2']}, inPlane: {} } },
+            
+            // Layer 2 - After second action
+            { id: 'S2', layer: 2, x: 150, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: []}, inPlane: {P1: ['C1'], P2: ['C2']} }, solutionPath: true, solutionStep: 2 },
+            { id: 'S2b', layer: 2, x: 400, state: { SFO: {planes: [], cargo: []}, JFK: {planes: ['P1', 'P2'], cargo: ['C2']}, inPlane: {P1: ['C1']} } },
+            { id: 'S2c', layer: 2, x: 650, state: { SFO: {planes: ['P1', 'P2'], cargo: []}, JFK: {planes: [], cargo: ['C2']}, inPlane: {P1: ['C1']} } },
+            { id: 'S2d', layer: 2, x: 900, state: { SFO: {planes: ['P1'], cargo: ['C1']}, JFK: {planes: ['P2'], cargo: []}, inPlane: {P2: ['C2']} } },
+            { id: 'S2e', layer: 2, x: 1150, state: { SFO: {planes: ['P2'], cargo: ['C1']}, JFK: {planes: ['P1'], cargo: ['C2']}, inPlane: {} } },
+            
+            // Layer 3 - After third action
+            { id: 'S3', layer: 3, x: 100, state: { SFO: {planes: [], cargo: []}, JFK: {planes: ['P1', 'P2'], cargo: []}, inPlane: {P1: ['C1'], P2: ['C2']} }, solutionPath: true, solutionStep: 3 },
+            { id: 'S3b', layer: 3, x: 300, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: []}, inPlane: {P1: ['C1'], P2: ['C2']} } },
+            { id: 'S3c', layer: 3, x: 500, state: { SFO: {planes: [], cargo: []}, JFK: {planes: ['P1', 'P2'], cargo: ['C2']}, inPlane: {P1: ['C1']} } },
+            { id: 'S3d', layer: 3, x: 700, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: ['C1']}, inPlane: {P2: ['C2']} } },
+            { id: 'S3e', layer: 3, x: 900, state: { SFO: {planes: ['P2'], cargo: []}, JFK: {planes: ['P1'], cargo: ['C2']}, inPlane: {P1: ['C1']} } },
+            
+            // Layer 4 - After fourth action
+            { id: 'S4', layer: 4, x: 100, state: { SFO: {planes: ['P2'], cargo: []}, JFK: {planes: ['P1'], cargo: []}, inPlane: {P1: ['C1'], P2: ['C2']} }, solutionPath: true, solutionStep: 4 },
+            { id: 'S4b', layer: 4, x: 300, state: { SFO: {planes: [], cargo: []}, JFK: {planes: ['P1', 'P2'], cargo: []}, inPlane: {P1: ['C1'], P2: ['C2']} } },
+            { id: 'S4c', layer: 4, x: 500, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: ['C1']}, inPlane: {P2: ['C2']} } },
+            { id: 'S4d', layer: 4, x: 700, state: { SFO: {planes: ['P2'], cargo: []}, JFK: {planes: ['P1'], cargo: ['C2']}, inPlane: {P1: ['C1']} } },
+            
+            // Layer 5 - After fifth action
+            { id: 'S5', layer: 5, x: 100, state: { SFO: {planes: ['P2'], cargo: []}, JFK: {planes: ['P1'], cargo: ['C1']}, inPlane: {P2: ['C2']} }, solutionPath: true, solutionStep: 5 },
+            { id: 'S5b', layer: 5, x: 300, state: { SFO: {planes: ['P2'], cargo: ['C2']}, JFK: {planes: ['P1'], cargo: []}, inPlane: {P1: ['C1']} } },
+            { id: 'S5c', layer: 5, x: 500, state: { SFO: {planes: [], cargo: []}, JFK: {planes: ['P1', 'P2'], cargo: ['C1']}, inPlane: {P2: ['C2']} } },
+            { id: 'S5d', layer: 5, x: 700, state: { SFO: {planes: ['P1'], cargo: []}, JFK: {planes: ['P2'], cargo: ['C1', 'C2']}, inPlane: {} } },
+            
+            // Layer 6 - Goal state
+            { id: 'S6', layer: 6, x: 100, state: { SFO: {planes: ['P2'], cargo: ['C2']}, JFK: {planes: ['P1'], cargo: ['C1']}, inPlane: {} }, solutionPath: true, solutionStep: 6, goal: true },
+            { id: 'S6b', layer: 6, x: 300, state: { SFO: {planes: ['P2'], cargo: []}, JFK: {planes: ['P1'], cargo: ['C1']}, inPlane: {P2: ['C2']} } },
+            { id: 'S6c', layer: 6, x: 500, state: { SFO: {planes: [], cargo: ['C2']}, JFK: {planes: ['P1', 'P2'], cargo: ['C1']}, inPlane: {} } },
+        ];
+
+        // Define edges (state transitions)
+        const edges = [
+            // From S0
+            { from: 'S0', to: 'S1', action: 'load C1→P1' },
+            { from: 'S0', to: 'S1b', action: 'fly P1→JFK' },
+            { from: 'S0', to: 'S1c', action: 'fly P2→SFO' },
+            
+            // From S1 (solution path)
+            { from: 'S1', to: 'S2', action: 'load C2→P2' },
+            { from: 'S1', to: 'S2b', action: 'fly P1→JFK' },
+            { from: 'S1', to: 'S2c', action: 'fly P2→SFO' },
+            
+            // From S2 (solution path)
+            { from: 'S2', to: 'S3', action: 'fly P1→JFK' },
+            { from: 'S2', to: 'S3b', action: 'fly P2→SFO' },
+            
+            // Additional branches
+            { from: 'S1b', to: 'S2b', action: 'load C1→P1' },
+            { from: 'S1c', to: 'S2c', action: 'load C1→P1' },
+            { from: 'S1c', to: 'S2d', action: 'load C2→P2' },
+            
+            // From S3 (solution path)
+            { from: 'S3', to: 'S4', action: 'fly P2→SFO' },
+            { from: 'S3', to: 'S4b', action: 'fly P1→SFO' },
+            
+            // More branches
+            { from: 'S2b', to: 'S3c', action: 'load C2→P2' },
+            { from: 'S2d', to: 'S3d', action: 'fly P1→JFK' },
+            { from: 'S2e', to: 'S3e', action: 'fly P2→JFK' },
+            
+            // From S4 (solution path)
+            { from: 'S4', to: 'S5', action: 'unload C1' },
+            { from: 'S4', to: 'S5b', action: 'unload C2' },
+            
+            // More branches
+            { from: 'S3d', to: 'S4c', action: 'fly P2→SFO' },
+            { from: 'S3e', to: 'S4d', action: 'fly P2→SFO' },
+            
+            // From S5 (solution path)
+            { from: 'S5', to: 'S6', action: 'unload C2' },
+            { from: 'S5', to: 'S6b', action: 'fly P2→JFK' },
+            
+            // Final branches
+            { from: 'S4c', to: 'S5d', action: 'unload C1' },
+            { from: 'S5c', to: 'S6c', action: 'fly P2→SFO' },
+        ];
+
+        let currentStep = 0;
+        const solutionPath = stateSpace.filter(s => s.solutionPath);
+
+        function getStateById(id) {
+            return stateSpace.find(s => s.id === id);
+        }
+
+        function renderStateGraph() {
+            const container = document.getElementById('graphContainer');
+            const svg = document.getElementById('edgesSvg');
+            
+            // Clear previous
+            const oldNodes = container.querySelectorAll('.state-node');
+            oldNodes.forEach(n => n.remove());
+            svg.innerHTML = '';
+
+            // Add arrow markers
+            svg.innerHTML = `
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                        <polygon points="0 0, 10 3, 0 6" />
+                    </marker>
+                    <marker id="arrowhead-solution" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" class="solution">
+                        <polygon points="0 0, 10 3, 0 6" />
+                    </marker>
+                    <marker id="arrowhead-active" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" class="active">
+                        <polygon points="0 0, 10 3, 0 6" />
+                    </marker>
+                </defs>
+            `;
+
+            const layerHeight = 140;
+            const nodeWidth = 180;
+            const nodeHeight = 80;
+
+            // Calculate container size
+            const maxLayer = Math.max(...stateSpace.map(s => s.layer));
+            const containerWidth = 1400;
+            const containerHeight = (maxLayer + 1) * layerHeight + 100;
+            
+            svg.setAttribute('width', containerWidth);
+            svg.setAttribute('height', containerHeight);
+            container.style.minHeight = containerHeight + 'px';
+
+            // Draw edges first
+            edges.forEach(edge => {
+                const fromState = getStateById(edge.from);
+                const toState = getStateById(edge.to);
+                
+                if (!fromState || !toState) return;
+
+                const x1 = fromState.x + nodeWidth / 2;
+                const y1 = fromState.layer * layerHeight + nodeHeight + 60;
+                const x2 = toState.x + nodeWidth / 2;
+                const y2 = toState.layer * layerHeight + 60;
+
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2 - 5);
+
+                const isSolutionEdge = fromState.solutionPath && toState.solutionPath;
+                const currentState = solutionPath[currentStep];
+                const isActive = isSolutionEdge && 
+                                fromState.solutionStep === currentStep - 1 && 
+                                toState.solutionStep === currentStep;
+
+                if (isActive) {
+                    line.classList.add('active-edge');
+                    line.setAttribute('marker-end', 'url(#arrowhead-active)');
+                } else if (isSolutionEdge) {
+                    line.classList.add('solution-path');
+                    line.setAttribute('marker-end', 'url(#arrowhead-solution)');
+                } else {
+                    line.setAttribute('marker-end', 'url(#arrowhead)');
+                }
+
+                svg.appendChild(line);
+            });
+
+            // Draw nodes
+            stateSpace.forEach(stateNode => {
+                const node = document.createElement('div');
+                node.className = 'state-node';
+                node.id = stateNode.id;
+                
+                const y = stateNode.layer * layerHeight + 60;
+                node.style.left = stateNode.x + 'px';
+                node.style.top = y + 'px';
+
+                if (stateNode.solutionPath) {
+                    node.classList.add('solution-path');
+                }
+
+                if (stateNode.goal) {
+                    node.classList.add('goal');
+                }
+
+                if (stateNode.solutionStep === currentStep) {
+                    node.classList.add('active');
+                }
+
+                // Build state description
+                const state = stateNode.state;
+                let desc = '';
+                
+                // SFO
+                const sfoPlanes = state.SFO.planes.join(', ') || '-';
+                const sfoCargo = state.SFO.cargo.join(', ') || '-';
+                desc += `SFO: ${sfoPlanes}`;
+                if (sfoCargo !== '-') desc += ` | ${sfoCargo}`;
+                
+                // JFK
+                desc += `\nJFK: ${state.JFK.planes.join(', ') || '-'}`;
+                const jfkCargo = state.JFK.cargo.join(', ') || '-';
+                if (jfkCargo !== '-') desc += ` | ${jfkCargo}`;
+                
+                // In planes
+                if (Object.keys(state.inPlane).length > 0) {
+                    desc += '\n';
+                    Object.entries(state.inPlane).forEach(([plane, cargo]) => {
+                        if (cargo.length > 0) {
+                            desc += `\n${plane}: ${cargo.join(', ')}`;
+                        }
+                    });
+                }
+
+                node.innerHTML = `
+                    <div class="node-id">${stateNode.id}${stateNode.goal ? ' (GOAL)' : ''}</div>
+                    <div class="node-content">${desc.split('\n').map(line => 
+                        `<div class="node-location">${line}</div>`
+                    ).join('')}</div>
+                `;
+
+                node.addEventListener('click', () => {
+                    if (stateNode.solutionPath) {
+                        currentStep = stateNode.solutionStep;
+                        updateUI();
+                    }
+                });
+
+                container.appendChild(node);
+            });
+        }
+
+        function renderState() {
+            const currentState = solutionPath[currentStep];
+            const state = currentState.state;
+            const grid = document.getElementById('locationGrid');
+            grid.innerHTML = '';
+
+            // Render SFO
+            const sfoBox = document.createElement('div');
+            sfoBox.className = 'airport-box';
+            sfoBox.innerHTML = '<div class="airport-name">SFO</div>';
+            
+            state.SFO.planes.forEach(plane => {
+                const planeEl = document.createElement('div');
+                planeEl.className = 'entity';
+                planeEl.innerHTML = `<div class="entity-icon plane-icon"></div>${plane}`;
+                
+                if (state.inPlane[plane] && state.inPlane[plane].length > 0) {
+                    const cargoList = document.createElement('div');
+                    cargoList.className = 'nested-cargo';
+                    cargoList.innerHTML = state.inPlane[plane].map(c => `└ ${c}`).join('<br>');
+                    planeEl.appendChild(cargoList);
+                }
+                
+                sfoBox.appendChild(planeEl);
+            });
+
+            state.SFO.cargo.forEach(cargo => {
+                const cargoEl = document.createElement('div');
+                cargoEl.className = 'entity';
+                cargoEl.innerHTML = `<div class="entity-icon cargo-icon"></div>${cargo}`;
+                sfoBox.appendChild(cargoEl);
+            });
+
+            grid.appendChild(sfoBox);
+
+            // Render JFK
+            const jfkBox = document.createElement('div');
+            jfkBox.className = 'airport-box';
+            jfkBox.innerHTML = '<div class="airport-name">JFK</div>';
+            
+            state.JFK.planes.forEach(plane => {
+                const planeEl = document.createElement('div');
+                planeEl.className = 'entity';
+                planeEl.innerHTML = `<div class="entity-icon plane-icon"></div>${plane}`;
+                
+                if (state.inPlane[plane] && state.inPlane[plane].length > 0) {
+                    const cargoList = document.createElement('div');
+                    cargoList.className = 'nested-cargo';
+                    cargoList.innerHTML = state.inPlane[plane].map(c => `└ ${c}`).join('<br>');
+                    planeEl.appendChild(cargoList);
+                }
+                
+                jfkBox.appendChild(planeEl);
+            });
+
+            state.JFK.cargo.forEach(cargo => {
+                const cargoEl = document.createElement('div');
+                cargoEl.className = 'entity';
+                cargoEl.innerHTML = `<div class="entity-icon cargo-icon"></div>${cargo}`;
+                jfkBox.appendChild(cargoEl);
+            });
+
+            grid.appendChild(jfkBox);
+
+            // Update goal status
+            const goalStatus = document.getElementById('goalStatus');
+            const c1AtJFK = state.JFK.cargo.includes('C1');
+            const c2AtSFO = state.SFO.cargo.includes('C2');
+            
+            if (c1AtJFK && c2AtSFO) {
+                goalStatus.classList.add('achieved');
+                goalStatus.innerHTML = '<div>✓ C1 → JFK</div><div>✓ C2 → SFO</div><div style="margin-top: 10px;">GOAL ACHIEVED</div>';
+            } else {
+                goalStatus.classList.remove('achieved');
+                goalStatus.innerHTML = `
+                    <div>${c1AtJFK ? '✓' : '○'} C1 → JFK</div>
+                    <div>${c2AtSFO ? '✓' : '○'} C2 → SFO</div>
+                `;
+            }
+        }
+
+        function updateUI() {
+            document.getElementById('currentStep').textContent = currentStep;
+            document.getElementById('totalSteps').textContent = solutionPath.length - 1;
+            document.getElementById('prevBtn').disabled = currentStep === 0;
+            document.getElementById('nextBtn').disabled = currentStep === solutionPath.length - 1;
+            
+            renderStateGraph();
+            renderState();
+        }
+
+        document.getElementById('nextBtn').addEventListener('click', () => {
+            if (currentStep < solutionPath.length - 1) {
+                currentStep++;
+                updateUI();
+            }
+        });
+
+        document.getElementById('prevBtn').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateUI();
+            }
+        });
+
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            currentStep = 0;
+            updateUI();
+        });
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' && currentStep < solutionPath.length - 1) {
+                currentStep++;
+                updateUI();
+            } else if (e.key === 'ArrowLeft' && currentStep > 0) {
+                currentStep--;
+                updateUI();
+            } else if (e.key === 'r' || e.key === 'R') {
+                currentStep = 0;
+                updateUI();
+            }
+        });
+
+        // Initial render
+        updateUI();
+    </script>
+</body>
+</html>

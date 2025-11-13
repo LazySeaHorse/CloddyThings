@@ -1,0 +1,1095 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics Mind Map</title>
+
+    <!-- KaTeX for beautiful math rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #ff6b35;
+            --accent-light: #ffb088;
+            --border: #e0e0e0;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+            /* Category colors - refined pastels */
+            --foundation: #E8EAED;
+            --foundation-border: #5F6368;
+            --descriptive: #FCE8E6;
+            --descriptive-border: #E67C73;
+            --distribution: #E6F4EA;
+            --distribution-border: #34A853;
+            --inference: #E8F0FE;
+            --inference-border: #4285F4;
+            --means-test: #FEF7E0;
+            --means-test-border: #F9AB00;
+            --categorical-test: #F3E8FD;
+            --categorical-border: #A142F4;
+            --anova-test: #FFF4E6;
+            --anova-border: #FF9800;
+            --relationship: #FFE8F5;
+            --relationship-border: #E91E63;
+            --discrete-dist: #F0F8FF;
+            --discrete-dist-border: #4169E1;
+            --sampling: #F5F5DC;
+            --sampling-border: #8B4513;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            overflow: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        #container {
+            display: flex;
+            height: 100vh;
+        }
+
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: auto;
+            background: var(--bg-primary);
+        }
+
+        #canvas-container::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        #canvas-container::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        #canvas-container::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 5px;
+        }
+
+        #canvas-container::-webkit-scrollbar-thumb:hover {
+            background: #c0c0c0;
+        }
+
+        #mindmap {
+            min-width: 3000px;
+            min-height: 2000px;
+            position: relative;
+            padding: 40px;
+        }
+
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .node {
+            position: absolute;
+            padding: 14px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: var(--shadow-sm);
+            user-select: none;
+            font-size: 13px;
+            font-weight: 500;
+            text-align: center;
+            border: 2px solid;
+            min-width: 120px;
+            letter-spacing: -0.01em;
+        }
+
+        .node:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+        }
+
+        .node.active {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: var(--shadow-lg);
+            z-index: 11;
+        }
+
+        /* Category styles */
+        .foundation {
+            background: var(--foundation);
+            border-color: var(--foundation-border);
+            color: var(--foundation-border);
+        }
+
+        .descriptive {
+            background: var(--descriptive);
+            border-color: var(--descriptive-border);
+            color: var(--descriptive-border);
+        }
+
+        .distribution {
+            background: var(--distribution);
+            border-color: var(--distribution-border);
+            color: var(--distribution-border);
+        }
+
+        .inference {
+            background: var(--inference);
+            border-color: var(--inference-border);
+            color: var(--inference-border);
+        }
+
+        .means-test {
+            background: var(--means-test);
+            border-color: var(--means-test-border);
+            color: var(--means-test-border);
+        }
+
+        .categorical-test {
+            background: var(--categorical-test);
+            border-color: var(--categorical-border);
+            color: var(--categorical-border);
+        }
+
+        .anova-test {
+            background: var(--anova-test);
+            border-color: var(--anova-border);
+            color: var(--anova-border);
+        }
+
+        .relationship {
+            background: var(--relationship);
+            border-color: var(--relationship-border);
+            color: var(--relationship-border);
+        }
+
+        .discrete-dist {
+            background: var(--discrete-dist);
+            border-color: var(--discrete-dist-border);
+            color: var(--discrete-dist-border);
+        }
+
+        .sampling {
+            background: var(--sampling);
+            border-color: var(--sampling-border);
+            color: var(--sampling-border);
+        }
+
+        .variance-related {
+            background: var(--anova-test);
+            border-color: var(--anova-border);
+            color: var(--anova-border);
+        }
+
+        #sidebar {
+            width: 0;
+            background: var(--bg-secondary);
+            box-shadow: -1px 0 0 var(--border);
+            overflow-y: auto;
+            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        #sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #sidebar::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 4px;
+        }
+
+        #sidebar.open {
+            width: 500px;
+        }
+
+        #sidebar-content {
+            padding: 48px 40px;
+            opacity: 0;
+            transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            max-width: 100%;
+        }
+
+        #sidebar.open #sidebar-content {
+            opacity: 1;
+        }
+
+        #close-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+        }
+
+        #close-btn:hover {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-color: var(--text-secondary);
+        }
+
+        h2 {
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            font-size: 24px;
+            font-weight: 600;
+            letter-spacing: -0.02em;
+        }
+
+        h3 {
+            color: var(--text-primary);
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.7;
+        }
+
+        .formula-block {
+            background: var(--bg-primary);
+            padding: 20px;
+            border-radius: 8px;
+            margin: 16px 0;
+            border: 1px solid var(--border);
+        }
+
+        .formula-display {
+            font-size: 18px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .formula-description {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .explanation {
+            color: var(--text-secondary);
+            line-height: 1.7;
+            margin: 16px 0;
+            font-size: 15px;
+            font-weight: 400;
+        }
+
+        .symbol-def {
+            background: var(--bg-primary);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-size: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-primary);
+            border-left: 3px solid var(--accent);
+        }
+
+        .connection-list {
+            list-style: none;
+            padding: 0;
+            display: grid;
+            gap: 8px;
+        }
+
+        .connection-list li {
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid transparent;
+        }
+
+        .connection-list li:hover {
+            background: white;
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateX(4px);
+        }
+
+        #legend {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        #legend h4 {
+            margin-bottom: 16px;
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            font-size: 13px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .legend-color {
+            width: 32px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 12px;
+            border: 2px solid;
+        }
+
+        .legend-color.foundation {
+            background: var(--foundation);
+            border-color: var(--foundation-border);
+        }
+
+        .legend-color.descriptive {
+            background: var(--descriptive);
+            border-color: var(--descriptive-border);
+        }
+
+        .legend-color.distribution {
+            background: var(--distribution);
+            border-color: var(--distribution-border);
+        }
+
+        .legend-color.inference {
+            background: var(--inference);
+            border-color: var(--inference-border);
+        }
+
+        .legend-color.means-test {
+            background: var(--means-test);
+            border-color: var(--means-test-border);
+        }
+
+        .legend-color.categorical-test {
+            background: var(--categorical-test);
+            border-color: var(--categorical-border);
+        }
+
+        .legend-color.anova-test {
+            background: var(--anova-test);
+            border-color: var(--anova-border);
+        }
+
+        .legend-color.relationship {
+            background: var(--relationship);
+            border-color: var(--relationship-border);
+        }
+
+        .legend-color.discrete-dist {
+            background: var(--discrete-dist);
+            border-color: var(--discrete-dist-border);
+        }
+
+        .legend-color.sampling {
+            background: var(--sampling);
+            border-color: var(--sampling-border);
+        }
+
+        #controls {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            display: flex;
+            gap: 8px;
+            z-index: 100;
+        }
+
+        #controls button {
+            padding: 10px 20px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        #controls button:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        #controls button.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        #search-input {
+            padding: 10px 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+            width: 200px;
+        }
+
+        #search-input:focus {
+            outline: none;
+            background: var(--bg-primary);
+            border-color: var(--accent);
+            box-shadow: var(--shadow-md);
+        }
+
+        #search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        /* Search highlighting styles */
+        .node.search-highlight {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+            border-color: var(--accent);
+            z-index: 15;
+        }
+
+        .node.search-dimmed {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+
+        .line {
+            stroke: #d0d0d0;
+            stroke-width: 1.5;
+            fill: none;
+            opacity: 0.4;
+        }
+
+        .line.active {
+            stroke: var(--accent);
+            stroke-width: 2;
+            opacity: 1;
+        }
+
+        .category-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 16px;
+        }
+
+        .katex {
+            font-size: 1.1em;
+        }
+
+        .katex-display {
+            margin: 0;
+        }
+
+        .formula-block+.formula-block {
+            margin-top: 12px;
+        }
+
+        .sidebar-header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 24px;
+            margin-bottom: 24px;
+        }
+
+        /* Add node panel */
+        #add-node-panel {
+            position: fixed;
+            top: 80px;
+            left: 24px;
+            background: var(--bg-secondary);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border);
+            z-index: 101;
+            width: 350px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none;
+        }
+
+        #add-node-panel.open {
+            display: block;
+        }
+
+        #add-node-panel h3 {
+            margin-top: 0;
+            margin-bottom: 16px;
+            text-transform: none;
+            font-size: 16px;
+            opacity: 1;
+        }
+
+        #add-node-panel label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        #add-node-panel input,
+        #add-node-panel select,
+        #add-node-panel textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            background: var(--bg-primary);
+        }
+
+        #add-node-panel textarea {
+            min-height: 60px;
+            resize: vertical;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        #add-node-panel button {
+            margin-top: 16px;
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 13px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        #add-node-panel button:hover {
+            background: #e55a25;
+        }
+
+        .formula-input-group {
+            background: var(--bg-primary);
+            padding: 12px;
+            border-radius: 6px;
+            margin-top: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .code-hint {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 4px;
+            font-style: italic;
+        }
+
+        #export-btn {
+            background: var(--distribution);
+            color: var(--distribution-border);
+            border-color: var(--distribution-border);
+        }
+
+        #export-btn:hover {
+            background: var(--distribution-border);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container">
+        <div id="canvas-container">
+            <div id="mindmap">
+                <svg id="connections"></svg>
+            </div>
+        </div>
+        <div id="sidebar">
+            <button id="close-btn">Close ✕</button>
+            <div id="sidebar-content"></div>
+        </div>
+    </div>
+
+    <div id="legend">
+        <h4>Categories</h4>
+        <div class="legend-item">
+            <div class="legend-color foundation"></div>
+            <span>Foundation</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color descriptive"></div>
+            <span>Descriptive Stats</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color distribution"></div>
+            <span>Distributions</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color inference"></div>
+            <span>Inference</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color means-test"></div>
+            <span>Tests for Means</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color categorical-test"></div>
+            <span>Categorical Tests</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color anova-test"></div>
+            <span>ANOVA</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color relationship"></div>
+            <span>Relationships</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color discrete-dist"></div>
+            <span>Discrete Distributions</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color sampling"></div>
+            <span>Sampling</span>
+        </div>
+    </div>
+
+    <div id="controls">
+        <button onclick="resetView()">Reset View</button>
+        <button onclick="centerView()">Center</button>
+        <button onclick="toggleAddNode()" id="add-node-btn">+ Add Node</button>
+        <input type="text" id="search-input" placeholder="Search nodes..." onkeyup="searchNodes()" />
+        <button onclick="exportData()" id="export-btn">Export Data</button>
+    </div>
+
+    <div id="add-node-panel">
+        <h3>Add New Node</h3>
+        <form onsubmit="addNewNode(event)">
+            <label>ID (unique, lowercase, no spaces)</label>
+            <input type="text" id="new-id" placeholder="e.g., median" required>
+
+            <label>Label (display name)</label>
+            <input type="text" id="new-label" placeholder="e.g., Median" required>
+
+            <label>Category</label>
+            <select id="new-category" required>
+                <option value="foundation">Foundation</option>
+                <option value="descriptive">Descriptive Stats</option>
+                <option value="distribution">Distributions</option>
+                <option value="inference">Inference</option>
+                <option value="means-test">Tests for Means</option>
+                <option value="categorical-test">Categorical Tests</option>
+                <option value="anova-test">ANOVA</option>
+                <option value="relationship">Relationships</option>
+                <option value="discrete-dist">Discrete Distributions</option>
+                <option value="sampling">Sampling</option>
+                <option value="variance-related">Variance</option>
+            </select>
+
+            <label>Title</label>
+            <input type="text" id="new-title" placeholder="Full concept name" required>
+
+            <label>Explanation</label>
+            <textarea id="new-explanation" placeholder="Plain English explanation" required></textarea>
+
+            <div class="formula-input-group">
+                <label>Formula 1 (LaTeX)</label>
+                <textarea id="new-formula1" placeholder="e.g., \bar{x} = \frac{\sum x}{n}"></textarea>
+                <div class="code-hint">Use LaTeX: \bar{x}, \sum, \frac{}{}, ^2, _1, etc.</div>
+
+                <label>Description 1</label>
+                <input type="text" id="new-desc1" placeholder="What this formula means">
+            </div>
+
+            <label>Symbols (one per line)</label>
+            <textarea id="new-symbols" placeholder="x = value&#10;n = sample size"></textarea>
+
+            <label>Connections (comma-separated IDs)</label>
+            <input type="text" id="new-connections" placeholder="e.g., mean, variance, sd">
+
+            <button type="submit">Add Node to Map</button>
+        </form>
+    </div>
+
+    <!-- Import node data from separate file -->
+    <script src="nodes-data.js"></script>
+
+    <script>
+
+        // ============================================
+        // RENDERING ENGINE
+        // ============================================
+
+        const categoryNames = {
+            'foundation': 'Foundation',
+            'descriptive': 'Descriptive Statistics',
+            'distribution': 'Distributions',
+            'inference': 'Statistical Inference',
+            'means-test': 'Tests for Means',
+            'categorical-test': 'Categorical Tests',
+            'anova-test': 'ANOVA',
+            'relationship': 'Relationships',
+            'variance-related': 'Variance'
+        };
+
+        const mindmap = document.getElementById('mindmap');
+        const svg = document.getElementById('connections');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarContent = document.getElementById('sidebar-content');
+        const closeBtn = document.getElementById('close-btn');
+
+        let activeNode = null;
+
+        function drawConnections() {
+            svg.innerHTML = '';
+            connections.forEach(conn => {
+                const fromNode = nodes.find(n => n.id === conn.from);
+                const toNode = nodes.find(n => n.id === conn.to);
+
+                if (fromNode && toNode) {
+                    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                    line.setAttribute('x1', fromNode.x + 60);
+                    line.setAttribute('y1', fromNode.y + 20);
+                    line.setAttribute('x2', toNode.x + 60);
+                    line.setAttribute('y2', toNode.y + 20);
+                    line.classList.add('line');
+                    line.dataset.from = conn.from;
+                    line.dataset.to = conn.to;
+                    svg.appendChild(line);
+                }
+            });
+        }
+
+        function renderNodes() {
+            mindmap.querySelectorAll('.node').forEach(n => n.remove());
+
+            nodes.forEach(node => {
+                const div = document.createElement('div');
+                div.className = `node ${node.category}`;
+                div.style.left = node.x + 'px';
+                div.style.top = node.y + 'px';
+                div.innerHTML = node.label;
+                div.dataset.id = node.id;
+
+                div.addEventListener('click', () => {
+                    document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+                    document.querySelectorAll('.line').forEach(l => l.classList.remove('active'));
+
+                    div.classList.add('active');
+                    activeNode = node.id;
+
+                    document.querySelectorAll('.line').forEach(line => {
+                        if (line.dataset.from === node.id || line.dataset.to === node.id) {
+                            line.classList.add('active');
+                        }
+                    });
+
+                    showSidebar(node);
+                });
+
+                mindmap.appendChild(div);
+            });
+        }
+
+        function showSidebar(node) {
+            const content = node.content;
+            const categoryName = categoryNames[node.category] || node.category;
+
+            let html = `
+                <div class="sidebar-header">
+                    <div class="category-badge ${node.category}" style="border: 2px solid var(--${node.category}-border);">${categoryName}</div>
+                    <h2>${content.title}</h2>
+                    <div class="explanation">${content.explanation}</div>
+                </div>
+                <h3>Formulas</h3>
+            `;
+
+            content.formulas.forEach(f => {
+                html += `
+                    <div class="formula-block">
+                        <div class="formula-display">$${f.latex}$</div>
+                        <div class="formula-description">${f.description}</div>
+                    </div>
+                `;
+            });
+
+            html += `<h3>Symbol Definitions</h3>`;
+            content.symbols.forEach(s => {
+                html += `<div class="symbol-def">${s}</div>`;
+            });
+
+            if (content.connections && content.connections.length > 0) {
+                html += `<h3>Related Concepts</h3><ul class="connection-list">`;
+                content.connections.forEach(connId => {
+                    const connNode = nodes.find(n => n.id === connId);
+                    if (connNode) {
+                        html += `<li onclick="jumpToNode('${connId}')">${connNode.label}</li>`;
+                    }
+                });
+                html += `</ul>`;
+            }
+
+            sidebarContent.innerHTML = html;
+            sidebar.classList.add('open');
+
+            setTimeout(() => {
+                renderMathInElement(document.getElementById('sidebar-content'), {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false }
+                    ],
+                    throwOnError: false
+                });
+            }, 10);
+        }
+
+        function jumpToNode(nodeId) {
+            const node = nodes.find(n => n.id === nodeId);
+            if (node) {
+                const element = document.querySelector(`[data-id="${nodeId}"]`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                    setTimeout(() => element.click(), 500);
+                }
+            }
+        }
+
+        closeBtn.addEventListener('click', () => {
+            sidebar.classList.remove('open');
+            document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+            document.querySelectorAll('.line').forEach(l => l.classList.remove('active'));
+            activeNode = null;
+        });
+
+        function resetView() {
+            document.getElementById('canvas-container').scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        }
+
+        function centerView() {
+            const container = document.getElementById('canvas-container');
+            const meanNode = nodes.find(n => n.id === 'mean');
+            if (meanNode) {
+                container.scrollTo({
+                    top: meanNode.y - container.clientHeight / 2,
+                    left: meanNode.x - container.clientWidth / 2,
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        // ============================================
+        // ADD NODE FUNCTIONALITY
+        // ============================================
+
+        function toggleAddNode() {
+            const panel = document.getElementById('add-node-panel');
+            const btn = document.getElementById('add-node-btn');
+            panel.classList.toggle('open');
+            btn.classList.toggle('active');
+        }
+
+        function addNewNode(event) {
+            event.preventDefault();
+
+            const id = document.getElementById('new-id').value.trim();
+            const label = document.getElementById('new-label').value.trim();
+            const category = document.getElementById('new-category').value;
+            const title = document.getElementById('new-title').value.trim();
+            const explanation = document.getElementById('new-explanation').value.trim();
+            const formula1 = document.getElementById('new-formula1').value.trim();
+            const desc1 = document.getElementById('new-desc1').value.trim();
+            const symbols = document.getElementById('new-symbols').value.trim().split('\n').filter(s => s);
+            const connectionsStr = document.getElementById('new-connections').value.trim();
+            const connectionsArr = connectionsStr ? connectionsStr.split(',').map(s => s.trim()) : [];
+
+            // Check if ID already exists
+            if (nodes.find(n => n.id === id)) {
+                alert('A node with this ID already exists!');
+                return;
+            }
+
+            // Find a good position (near the center for now)
+            const x = 1500 + (Math.random() - 0.5) * 400;
+            const y = 1000 + (Math.random() - 0.5) * 400;
+
+            // Create formulas array
+            const formulas = [];
+            if (formula1 && desc1) {
+                formulas.push(formula(formula1, desc1));
+            }
+
+            // Create new node
+            const newNode = createNode(id, label, category, [x, y], {
+                title,
+                explanation,
+                formulas,
+                symbols,
+                connections: connectionsArr
+            });
+
+            nodes.push(newNode);
+
+            // Add connections
+            connectionsArr.forEach(targetId => {
+                if (nodes.find(n => n.id === targetId)) {
+                    connections.push({ from: id, to: targetId });
+                }
+            });
+
+            // Re-render
+            renderNodes();
+            drawConnections();
+
+            // Reset form and close
+            event.target.reset();
+            toggleAddNode();
+
+            alert(`Node "${label}" added successfully! You can now click on it in the map.`);
+        }
+
+        // ============================================
+        // SEARCH FUNCTIONALITY
+        // ============================================
+
+        function searchNodes() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const nodeElements = document.querySelectorAll('.node');
+
+            // Clear previous search highlights
+            nodeElements.forEach(node => {
+                node.classList.remove('search-highlight', 'search-dimmed');
+            });
+
+            if (searchTerm.trim() === '') {
+                return; // Show all nodes normally if search is empty
+            }
+
+            let hasMatches = false;
+
+            nodeElements.forEach(node => {
+                const nodeId = node.dataset.id;
+                const nodeData = nodes.find(n => n.id === nodeId);
+
+                if (nodeData) {
+                    // Search in multiple fields
+                    const searchableText = [
+                        nodeData.label,
+                        nodeData.content.title,
+                        nodeData.content.explanation,
+                        nodeData.content.symbols?.join(' ') || '',
+                        nodeData.content.formulas?.map(f => f.description).join(' ') || ''
+                    ].join(' ').toLowerCase();
+
+                    if (searchableText.includes(searchTerm)) {
+                        node.classList.add('search-highlight');
+                        hasMatches = true;
+                    } else {
+                        node.classList.add('search-dimmed');
+                    }
+                }
+            });
+
+            // If we have matches, scroll to the first one
+            if (hasMatches) {
+                const firstMatch = document.querySelector('.node.search-highlight');
+                if (firstMatch) {
+                    firstMatch.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // ============================================
+        // EXPORT FUNCTIONALITY
+        // ============================================
+
+        function exportData() {
+            const data = {
+                nodes: nodes,
+                connections: connectionPairs
+            };
+
+            const dataStr = JSON.stringify(data, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'mindmap-data.json';
+            link.click();
+            URL.revokeObjectURL(url);
+
+            console.log('Exported data:', data);
+            alert('Mind map data exported! Check your downloads folder.');
+        }
+
+        // Initialize
+        renderNodes();
+        drawConnections();
+        setTimeout(centerView, 100);
+    </script>
+</body>
+
+</html>

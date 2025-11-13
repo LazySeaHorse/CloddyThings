@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistics Concept Map</title>
+    
+    <!-- KaTeX for LaTeX rendering -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.js"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/contrib/auto-render.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #FAFAF8;
+            --bg-secondary: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #6B6B6B;
+            --text-tertiary: #9B9B9B;
+            --accent-orange: #FF6B00;
+            --accent-yellow: #FFB800;
+            --accent-green: #00B874;
+            --accent-blue: #0084FF;
+            --border-light: #E5E5E5;
+            --border-dark: #D0D0D0;
+            --shadow-sm: 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+            --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            overflow: hidden;
+            height: 100vh;
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        #canvas {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: auto;
+            scroll-behavior: smooth;
+        }
+        
+        #canvas::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        #canvas::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        
+        #canvas::-webkit-scrollbar-thumb {
+            background: var(--border-dark);
+            border-radius: 5px;
+        }
+        
+        #canvas::-webkit-scrollbar-thumb:hover {
+            background: var(--text-secondary);
+        }
+        
+        #mindmap {
+            position: relative;
+            width: 3200px;
+            height: 2400px;
+            padding: 100px;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 39px, var(--border-light) 39px, var(--border-light) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, var(--border-light) 39px, var(--border-light) 40px);
+            background-size: 40px 40px;
+        }
+        
+        .node {
+            position: absolute;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            padding: 16px 20px;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10;
+            min-width: 160px;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .node:hover {
+            border-color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+            z-index: 20;
+        }
+        
+        .node.expanded {
+            min-width: 380px;
+            z-index: 30;
+            box-shadow: var(--shadow-lg);
+            border-color: var(--text-primary);
+        }
+        
+        .node.foundation {
+            border-color: var(--accent-orange);
+            border-width: 3px;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #FFF8F3 100%);
+        }
+        
+        .node.foundation:hover {
+            border-color: var(--accent-orange);
+        }
+        
+        .node.primary {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #F3F8FF 100%);
+        }
+        
+        .node.secondary {
+            border-color: var(--accent-green);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #F3FFF8 100%);
+        }
+        
+        .node.tertiary {
+            border-color: var(--accent-yellow);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #FFFBF3 100%);
+        }
+        
+        .node-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .node-icon {
+            width: 24px;
+            height: 24px;
+            background: var(--text-primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: var(--bg-secondary);
+            font-weight: 600;
+        }
+        
+        .node.foundation .node-icon {
+            background: var(--accent-orange);
+        }
+        
+        .node.primary .node-icon {
+            background: var(--accent-blue);
+        }
+        
+        .node.secondary .node-icon {
+            background: var(--accent-green);
+        }
+        
+        .node.tertiary .node-icon {
+            background: var(--accent-yellow);
+        }
+        
+        .node-title {
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+        }
+        
+        .node-subtitle {
+            font-size: 11px;
+            color: var(--text-tertiary);
+            margin-top: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .node-content {
+            display: none;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-light);
+            animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .node.expanded .node-content {
+            display: block;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .explanation {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 12px;
+            font-weight: 400;
+        }
+        
+        .formula-block {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin: 8px 0;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+        }
+        
+        .formula-block .katex {
+            font-size: 1.1em;
+        }
+        
+        .symbols {
+            background: var(--bg-primary);
+            border-left: 3px solid var(--border-dark);
+            padding: 8px 12px;
+            margin: 8px 0;
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            line-height: 1.5;
+        }
+        
+        .example-box {
+            background: linear-gradient(135deg, #FFF8F3 0%, #FFF3E8 100%);
+            border: 1px solid #FFE0C7;
+            border-radius: 8px;
+            padding: 10px 14px;
+            margin: 12px 0;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .connection {
+            position: absolute;
+            stroke: var(--border-dark);
+            stroke-width: 1.5;
+            fill: none;
+            opacity: 0.3;
+            z-index: 1;
+            pointer-events: none;
+            stroke-dasharray: 4,4;
+        }
+        
+        .connection.strong {
+            stroke-width: 2;
+            opacity: 0.5;
+            stroke-dasharray: none;
+        }
+        
+        #header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        #header h1 {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+        
+        #header .subtitle {
+            margin-left: 20px;
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
+            width: 40px;
+            height: 40px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .control-btn:hover {
+            border-color: var(--text-primary);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .legend {
+            position: fixed;
+            bottom: 30px;
+            left: 30px;
+            background: var(--bg-secondary);
+            padding: 20px;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            box-shadow: var(--shadow-md);
+            max-width: 220px;
+        }
+        
+        .legend h3 {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-tertiary);
+            margin-bottom: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 8px 0;
+            gap: 10px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid;
+        }
+        
+        .legend-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .help-text {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-light);
+            font-size: 11px;
+            color: var(--text-tertiary);
+            line-height: 1.5;
+        }
+        
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div id="header">
+        <h1>STATISTICS CONCEPT MAP</h1>
+        <span class="subtitle">Interactive Learning Tool</span>
+    </div>
+    
+    <div id="canvas" style="padding-top: 60px;">
+        <svg id="connections"></svg>
+        <div id="mindmap"></div>
+    </div>
+    
+    <div class="legend">
+        <h3>Navigation Guide</h3>
+        <div class="legend-item">
+            <div class="legend-color" style="border-color: var(--accent-orange);"></div>
+            <span class="legend-label">Core Concepts</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="border-color: var(--accent-blue);"></div>
+            <span class="legend-label">Descriptive Stats</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="border-color: var(--accent-green);"></div>
+            <span class="legend-label">Inference Tests</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="border-color: var(--accent-yellow);"></div>
+            <span class="legend-label">Advanced Tests</span>
+        </div>
+        <div class="help-text">
+            Click nodes to expand<br>
+            Scroll to navigate<br>
+            Dashed lines show connections
+        </div>
+    </div>
+    
+    <div class="controls">
+        <div class="control-btn" onclick="resetView()" title="Reset View">⟲</div>
+        <div class="control-btn" onclick="toggleConnections()" title="Toggle Connections">—</div>
+        <div class="control-btn" onclick="expandAll()" title="Expand All">⊕</div>
+        <div class="control-btn" onclick="collapseAll()" title="Collapse All">⊖</div>
+    </div>
+    
+    <script>
+        // ==================================================
+        // DATA STRUCTURE - EASY TO ADD NEW NODES HERE!
+        // ==================================================
+        
+        const NODES = {
+            // FOUNDATION CONCEPTS
+            counting: {
+                type: 'foundation',
+                position: { x: 1400, y: 900 },
+                icon: 'Σ',
+                title: 'Foundation: Counting & Sums',
+                subtitle: 'Where it all begins',
+                content: {
+                    explanation: 'Everything in statistics starts with counting things and adding them up.',
+                    formulas: [
+                        'n = \\text{number of items}',
+                        '\\sum_{i=1}^{n} x_i = x_1 + x_2 + \\cdots + x_n'
+                    ],
+                    symbols: 'n = sample size<br>Σ = summation operator ("add them all up")',
+                    example: '📝 Example: Count 5 test scores, add them up to get total'
+                }
+            },
+            
+            mean: {
+                type: 'primary',
+                position: { x: 1400, y: 750 },
+                icon: 'μ',
+                title: 'Mean (Average)',
+                subtitle: 'Central Tendency',
+                content: {
+                    explanation: 'The "balance point" of your data - where the data centers around.',
+                    formulas: [
+                        '\\bar{x} = \\frac{\\sum_{i=1}^{n} x_i}{n}'
+                    ],
+                    symbols: 'x̄ = sample mean<br>Σx = sum of all values<br>n = number of values',
+                    example: '📝 Test scores: 70, 80, 90 → Mean = 240/3 = 80'
+                }
+            },
+            
+            variance: {
+                type: 'primary',
+                position: { x: 1600, y: 750 },
+                icon: 'σ²',
+                title: 'Variance',
+                subtitle: 'Spread Measure',
+                content: {
+                    explanation: 'Average squared distance from the mean - measures data spread.',
+                    formulas: [
+                        's^2 = \\frac{\\sum_{i=1}^{n} (x_i - \\bar{x})^2}{n-1}'
+                    ],
+                    symbols: 's² = sample variance<br>n-1 = degrees of freedom (Bessel\'s correction)',
+                    example: '📝 Large variance = spread out data, Small variance = clustered data'
+                }
+            },
+            
+            stdev: {
+                type: 'primary',
+                position: { x: 1800, y: 750 },
+                icon: 'σ',
+                title: 'Standard Deviation',
+                subtitle: 'Spread in Original Units',
+                content: {
+                    explanation: 'Square root of variance - average distance from mean in original units.',
+                    formulas: [
+                        's = \\sqrt{s^2} = \\sqrt{\\frac{\\sum (x_i - \\bar{x})^2}{n-1}}'
+                    ],
+                    symbols: 's = sample standard deviation',
+                    example: '📝 68-95-99.7 Rule: ~68% within 1σ, ~95% within 2σ'
+                }
+            },
+            
+            stderr: {
+                type: 'secondary',
+                position: { x: 2000, y: 750 },
+                icon: 'SE',
+                title: 'Standard Error',
+                subtitle: 'Sampling Variability',
+                content: {
+                    explanation: 'How much would sample means vary if we repeated sampling?',
+                    formulas: [
+                        'SE = \\frac{s}{\\sqrt{n}}'
+                    ],
+                    symbols: 'SE = standard error of the mean<br>s = sample standard deviation<br>n = sample size',
+                    example: '📝 Larger samples → smaller SE → more precise estimates'
+                }
+            },
+            
+            df: {
+                type: 'tertiary',
+                position: { x: 1400, y: 600 },
+                icon: 'df',
+                title: 'Degrees of Freedom',
+                subtitle: 'Free Parameters',
+                content: {
+                    explanation: 'Number of values free to vary after constraints are applied.',
+                    formulas: [
+                        'df = n - k'
+                    ],
+                    symbols: 'n = sample size<br>k = number of constraints/parameters estimated',
+                    example: '📝 If mean is fixed and you know n-1 values, the last is determined'
+                }
+            },
+            
+            hypothesis: {
+                type: 'foundation',
+                position: { x: 900, y: 500 },
+                icon: 'H₀',
+                title: 'Hypothesis Testing',
+                subtitle: 'Statistical Decision Making',
+                content: {
+                    explanation: 'Framework for deciding if observed differences are real or just chance.',
+                    formulas: [
+                        'H_0: \\text{null hypothesis (no effect)}',
+                        'H_1: \\text{alternative hypothesis}',
+                        '\\text{Reject } H_0 \\text{ if } p < \\alpha'
+                    ],
+                    symbols: 'α = significance level (typically 0.05)<br>p-value = probability of data given H₀ is true',
+                    example: '📝 p < 0.05 → "statistically significant" result'
+                }
+            },
+            
+            confidence: {
+                type: 'secondary',
+                position: { x: 700, y: 600 },
+                icon: 'CI',
+                title: 'Confidence Intervals',
+                subtitle: 'Estimation Range',
+                content: {
+                    explanation: 'Range where the true parameter likely lies.',
+                    formulas: [
+                        'CI = \\bar{x} \\pm t_{\\alpha/2} \\times SE',
+                        '95\\% \\text{ CI} = \\bar{x} \\pm 1.96 \\times SE \\text{ (large n)}'
+                    ],
+                    symbols: 't = critical value from t-distribution',
+                    example: '📝 95% CI: If repeated 100 times, ~95 intervals contain true value'
+                }
+            },
+            
+            covariance: {
+                type: 'primary',
+                position: { x: 1200, y: 450 },
+                icon: 'cov',
+                title: 'Covariance',
+                subtitle: 'Joint Variability',
+                content: {
+                    explanation: 'Do two variables move together or opposite?',
+                    formulas: [
+                        '\\text{cov}(X,Y) = \\frac{\\sum (x_i - \\bar{x})(y_i - \\bar{y})}{n-1}'
+                    ],
+                    symbols: 'Positive = same direction<br>Negative = opposite directions<br>Zero = independent',
+                    example: '📝 Height & Weight: positive covariance (taller → heavier)'
+                }
+            },
+            
+            correlation: {
+                type: 'primary',
+                position: { x: 1000, y: 350 },
+                icon: 'r',
+                title: 'Correlation Coefficient',
+                subtitle: 'Standardized Relationship',
+                content: {
+                    explanation: 'Standardized covariance: strength of linear relationship (-1 to +1).',
+                    formulas: [
+                        'r = \\frac{\\text{cov}(X,Y)}{s_X \\cdot s_Y}'
+                    ],
+                    symbols: 'r = Pearson correlation coefficient<br>-1 = perfect negative<br>+1 = perfect positive<br>0 = no linear relationship',
+                    example: '📝 r = 0.8 → strong positive relationship'
+                }
+            },
+            
+            regression: {
+                type: 'secondary',
+                position: { x: 800, y: 250 },
+                icon: 'ŷ',
+                title: 'Linear Regression',
+                subtitle: 'Prediction Model',
+                content: {
+                    explanation: 'Find best-fit line to predict Y from X.',
+                    formulas: [
+                        '\\hat{y} = b_0 + b_1 x',
+                        'b_1 = r \\cdot \\frac{s_Y}{s_X}',
+                        'b_0 = \\bar{y} - b_1 \\bar{x}'
+                    ],
+                    symbols: 'b₁ = slope (regression coefficient)<br>b₀ = y-intercept<br>R² = r² = proportion of variance explained',
+                    example: '📝 Predict house price from size: Price = 50000 + 200×sqft'
+                }
+            },
+            
+            ztest: {
+                type: 'secondary',
+                position: { x: 500, y: 750 },
+                icon: 'Z',
+                title: 'Z-Test',
+                subtitle: 'Known σ Test',
+                content: {
+                    explanation: 'Test when population standard deviation is known (rare!).',
+                    formulas: [
+                        'z = \\frac{\\bar{x} - \\mu_0}{\\sigma / \\sqrt{n}}'
+                    ],
+                    symbols: 'μ₀ = hypothesized population mean<br>σ = known population SD',
+                    example: '📝 Standardized test with known σ = 15'
+                }
+            },
+            
+            ttest1: {
+                type: 'secondary',
+                position: { x: 300, y: 850 },
+                icon: 't₁',
+                title: 'One-Sample t-test',
+                subtitle: 'Single Mean Test',
+                content: {
+                    explanation: 'Is sample mean different from a known value?',
+                    formulas: [
+                        't = \\frac{\\bar{x} - \\mu_0}{s / \\sqrt{n}}',
+                        'df = n - 1'
+                    ],
+                    symbols: 'μ₀ = hypothesized value<br>s = sample standard deviation',
+                    example: '📝 Is class average different from 75?'
+                }
+            },
+            
+            ttest2: {
+                type: 'secondary',
+                position: { x: 300, y: 950 },
+                icon: 't₂',
+                title: 'Independent t-test',
+                subtitle: 'Two Groups Test',
+                content: {
+                    explanation: 'Compare means of two independent groups.',
+                    formulas: [
+                        't = \\frac{\\bar{x}_1 - \\bar{x}_2}{\\sqrt{s_p^2 \\left(\\frac{1}{n_1} + \\frac{1}{n_2}\\right)}}',
+                        's_p^2 = \\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}',
+                        'df = n_1 + n_2 - 2'
+                    ],
+                    symbols: 's²ₚ = pooled variance',
+                    example: '📝 Compare men\'s vs women\'s heights'
+                }
+            },
+            
+            ttestp: {
+                type: 'secondary',
+                position: { x: 300, y: 1050 },
+                icon: 'tₚ',
+                title: 'Paired t-test',
+                subtitle: 'Before/After Test',
+                content: {
+                    explanation: 'Compare same subjects measured twice.',
+                    formulas: [
+                        't = \\frac{\\bar{d}}{s_d / \\sqrt{n}}',
+                        'df = n - 1'
+                    ],
+                    symbols: 'd = differences (after - before)<br>d̄ = mean difference<br>sₐ = SD of differences',
+                    example: '📝 Weight before and after diet program'
+                }
+            },
+            
+            pooled: {
+                type: 'secondary',
+                position: { x: 500, y: 950 },
+                icon: 's²ₚ',
+                title: 'Pooled Variance',
+                subtitle: 'Combined Variance',
+                content: {
+                    explanation: 'Weighted average of two group variances.',
+                    formulas: [
+                        's_p^2 = \\frac{(n_1-1)s_1^2 + (n_2-1)s_2^2}{n_1 + n_2 - 2}'
+                    ],
+                    symbols: 'Assumes equal population variances',
+                    example: '📝 Used in independent samples t-test'
+                }
+            },
+            
+            chisq: {
+                type: 'tertiary',
+                position: { x: 1800, y: 400 },
+                icon: 'χ²',
+                title: 'Chi-Square Distribution',
+                subtitle: 'Categorical Data',
+                content: {
+                    explanation: 'Distribution for testing categorical data relationships.',
+                    formulas: [
+                        '\\chi^2 = \\sum \\frac{(O - E)^2}{E}'
+                    ],
+                    symbols: 'O = observed frequency<br>E = expected frequency',
+                    example: '📝 Always positive, right-skewed, approaches normal as df increases'
+                }
+            },
+            
+            chigof: {
+                type: 'tertiary',
+                position: { x: 2000, y: 350 },
+                icon: 'χ²',
+                title: 'Goodness of Fit',
+                subtitle: 'Distribution Test',
+                content: {
+                    explanation: 'Do observed frequencies match expected distribution?',
+                    formulas: [
+                        '\\chi^2 = \\sum \\frac{(O_i - E_i)^2}{E_i}',
+                        'df = k - 1'
+                    ],
+                    symbols: 'k = number of categories',
+                    example: '📝 Is a die fair? (1/6 probability for each face)'
+                }
+            },
+            
+            chiind: {
+                type: 'tertiary',
+                position: { x: 2000, y: 450 },
+                icon: 'χ²',
+                title: 'Test of Independence',
+                subtitle: 'Association Test',
+                content: {
+                    explanation: 'Are two categorical variables related?',
+                    formulas: [
+                        'E_{ij} = \\frac{\\text{row}_i \\times \\text{col}_j}{\\text{total}}',
+                        'df = (r-1)(c-1)'
+                    ],
+                    symbols: 'r = number of rows<br>c = number of columns',
+                    example: '📝 Is smoking related to lung cancer?'
+                }
+            },
+            
+            ftest: {
+                type: 'tertiary',
+                position: { x: 600, y: 1150 },
+                icon: 'F',
+                title: 'F-Test',
+                subtitle: 'Variance Ratio Test',
+                content: {
+                    explanation: 'Compare two variances or multiple group means.',
+                    formulas: [
+                        'F = \\frac{s_1^2}{s_2^2} \\text{ or } F = \\frac{MS_{between}}{MS_{within}}'
+                    ],
+                    symbols: 'MS = Mean Square = SS/df',
+                    example: '📝 Foundation for ANOVA tests'
+                }
+            },
+            
+            anova1: {
+                type: 'tertiary',
+                position: { x: 800, y: 1200 },
+                icon: 'F',
+                title: 'One-Way ANOVA',
+                subtitle: 'Multiple Groups Test',
+                content: {
+                    explanation: 'Compare means across 3+ groups.',
+                    formulas: [
+                        'F = \\frac{MS_{between}}{MS_{within}}',
+                        'SS_{between} = \\sum n_i(\\bar{x}_i - \\bar{x}_{grand})^2',
+                        'SS_{within} = \\sum \\sum (x_{ij} - \\bar{x}_i)^2'
+                    ],
+                    symbols: 'SS = Sum of Squares<br>MS = Mean Square = SS/df',
+                    example: '📝 Compare 3 teaching methods\' effectiveness'
+                }
+            },
+            
+            anova2: {
+                type: 'tertiary',
+                position: { x: 1000, y: 1250 },
+                icon: 'F₂',
+                title: 'Two-Way ANOVA',
+                subtitle: 'Two Factors Test',
+                content: {
+                    explanation: 'Test effects of two factors and their interaction.',
+                    formulas: [
+                        'F_A = \\frac{MS_A}{MS_{error}}',
+                        'F_B = \\frac{MS_B}{MS_{error}}',
+                        'F_{A \\times B} = \\frac{MS_{A \\times B}}{MS_{error}}'
+                    ],
+                    symbols: 'Tests main effects A, B and interaction A×B',
+                    example: '📝 Teaching method × Time of day on test scores'
+                }
+            }
+        };
+        
+        // CONNECTION DEFINITIONS
+        const CONNECTIONS = [
+            ['counting', 'mean', true],
+            ['mean', 'variance', true],
+            ['variance', 'stdev', true],
+            ['stdev', 'stderr', true],
+            ['stderr', 'confidence', true],
+            ['stderr', 'ztest', false],
+            ['stderr', 'ttest1', false],
+            ['variance', 'ftest', false],
+            ['mean', 'df', false],
+            ['covariance', 'correlation', true],
+            ['correlation', 'regression', true],
+            ['hypothesis', 'confidence', false],
+            ['hypothesis', 'ztest', false],
+            ['hypothesis', 'ttest1', false],
+            ['hypothesis', 'ttest2', false],
+            ['hypothesis', 'ttestp', false],
+            ['hypothesis', 'chigof', false],
+            ['hypothesis', 'chiind', false],
+            ['hypothesis', 'ftest', false],
+            ['ztest', 'ttest1', false],
+            ['ttest1', 'ttest2', false],
+            ['ttest2', 'ttestp', false],
+            ['ttest2', 'pooled', true],
+            ['pooled', 'ttest2', true],
+            ['chisq', 'chigof', true],
+            ['chisq', 'chiind', true],
+            ['ftest', 'anova1', true],
+            ['anova1', 'anova2', true],
+            ['variance', 'covariance', false],
+            ['df', 'ttest1', false],
+            ['df', 'ttest2', false],
+            ['df', 'ttestp', false],
+            ['df', 'chigof', false],
+            ['df', 'chiind', false],
+            ['df', 'anova1', false]
+        ];
+        
+        // ==================================================
+        // RENDERING FUNCTIONS
+        // ==================================================
+        
+        function createNode(id, nodeData) {
+            const node = document.createElement('div');
+            node.className = `node ${nodeData.type}`;
+            node.style.left = `${nodeData.position.x}px`;
+            node.style.top = `${nodeData.position.y}px`;
+            node.setAttribute('data-concept', id);
+            
+            // Build formulas HTML
+            const formulasHtml = nodeData.content.formulas
+                .map(formula => `<div class="formula-block">$$${formula}$$</div>`)
+                .join('');
+            
+            node.innerHTML = `
+                <div class="node-header">
+                    <div class="node-icon">${nodeData.icon}</div>
+                    <div>
+                        <div class="node-title">${nodeData.title}</div>
+                        <div class="node-subtitle">${nodeData.subtitle}</div>
+                    </div>
+                </div>
+                <div class="node-content">
+                    <div class="explanation">${nodeData.content.explanation}</div>
+                    ${formulasHtml}
+                    <div class="symbols">${nodeData.content.symbols}</div>
+                    <div class="example-box">${nodeData.content.example}</div>
+                </div>
+            `;
+            
+            return node;
+        }
+        
+        function renderMindMap() {
+            const mindmap = document.getElementById('mindmap');
+            mindmap.innerHTML = ''; // Clear existing nodes
+            
+            // Create all nodes
+            Object.entries(NODES).forEach(([id, nodeData]) => {
+                const node = createNode(id, nodeData);
+                mindmap.appendChild(node);
+            });
+            
+            // Add click handlers
+            document.querySelectorAll('.node').forEach(node => {
+                node.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    
+                    // Close other expanded nodes
+                    document.querySelectorAll('.node.expanded').forEach(other => {
+                        if (other !== this) {
+                            other.classList.remove('expanded');
+                        }
+                    });
+                    
+                    // Toggle current node
+                    this.classList.toggle('expanded');
+                    
+                    // Re-render math if expanding
+                    if (this.classList.contains('expanded')) {
+                        renderMathInElement(this, {
+                            delimiters: [
+                                {left: '$$', right: '$$', display: true},
+                                {left: '$', right: '$', display: false}
+                            ],
+                            throwOnError : false
+                        });
+                    }
+                });
+            });
+        }
+        
+        function drawConnections() {
+            const svg = document.getElementById('connections');
+            const mindmap = document.getElementById('mindmap');
+            svg.innerHTML = '';
+            
+            CONNECTIONS.forEach(([from, to, strong]) => {
+                const fromNode = document.querySelector(`[data-concept="${from}"]`);
+                const toNode = document.querySelector(`[data-concept="${to}"]`);
+                
+                if (fromNode && toNode) {
+                    const fromRect = fromNode.getBoundingClientRect();
+                    const toRect = toNode.getBoundingClientRect();
+                    const mindmapRect = mindmap.getBoundingClientRect();
+                    
+                    const x1 = fromRect.left + fromRect.width/2 - mindmapRect.left;
+                    const y1 = fromRect.top + fromRect.height/2 - mindmapRect.top;
+                    const x2 = toRect.left + toRect.width/2 - mindmapRect.left;
+                    const y2 = toRect.top + toRect.height/2 - mindmapRect.top;
+                    
+                    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                    const midX = (x1 + x2) / 2;
+                    const midY = (y1 + y2) / 2;
+                    
+                    path.setAttribute('d', `M ${x1} ${y1} Q ${midX} ${y1}, ${midX} ${midY} T ${x2} ${y2}`);
+                    path.setAttribute('class', strong ? 'connection strong' : 'connection');
+                    
+                    svg.appendChild(path);
+                }
+            });
+        }
+        
+        // Control functions
+        function resetView() {
+            const canvas = document.getElementById('canvas');
+            canvas.scrollLeft = (canvas.scrollWidth - canvas.clientWidth) / 2;
+            canvas.scrollTop = (canvas.scrollHeight - canvas.clientHeight) / 2;
+        }
+        
+        function toggleConnections() {
+            const svg = document.getElementById('connections');
+            svg.style.display = svg.style.display === 'none' ? 'block' : 'none';
+        }
+        
+        function expandAll() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.add('expanded');
+                renderMathInElement(node, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ],
+                    throwOnError : false
+                });
+            });
+        }
+        
+        function collapseAll() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('expanded');
+            });
+        }
+        
+        // Close nodes when clicking outside
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.node.expanded').forEach(node => {
+                node.classList.remove('expanded');
+            });
+        });
+        
+        // Initialize
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMindMap();
+            
+            // Render LaTeX
+            renderMathInElement(document.body, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError : false
+            });
+        });
+        
+        window.addEventListener('load', function() {
+            drawConnections();
+            resetView();
+        });
+        
+        // Redraw connections on window resize
+        window.addEventListener('resize', drawConnections);
+    </script>
+</body>
+</html>

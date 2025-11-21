@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infinite Canvas: Math, Text & Graphs</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 1. MathLive (Editing Math) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
+    
+    <!-- 2. Marked.js (Markdown) -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    
+    <!-- 3. KaTeX (Rendering Math in Markdown) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    
+    <!-- 4. Function Plot + D3 (Graphing) -->
+    <script src="https://unpkg.com/d3@3/d3.min.js"></script>
+    <script src="https://unpkg.com/function-plot@1/dist/function-plot.js"></script>
+
+    <style>
+        body { overscroll-behavior: none; }
+        
+        /* Grid Background */
+        #canvas-container {
+            background-color: #f9fafb; 
+            background-image: 
+                linear-gradient(to right, #e5e7eb 1px, transparent 1px),
+                linear-gradient(to bottom, #e5e7eb 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+
+        /* Node Container */
+        .node {
+            position: absolute;
+            border-radius: 0.5rem;
+            transition: box-shadow 0.15s ease;
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.1);
+            border: 1px solid transparent;
+        }
+
+        .node.selected {
+            box-shadow: 0 0 0 2px #3b82f6, 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            z-index: 1000 !important;
+            background: #ffffff;
+            border-color: #bfdbfe;
+        }
+        
+        .node.dragging {
+            cursor: grabbing;
+            opacity: 0.9;
+        }
+
+        /* 1. Math Node */
+        .node-math { padding: 8px 12px; min-width: 60px; cursor: grab; }
+        
+        /* 2. Text/Markdown Node */
+        .node-text { padding: 16px; min-width: 250px; max-width: 500px; min-height: 60px; cursor: grab; }
+        
+        /* 3. Graph Node */
+        .node-graph { 
+            padding: 12px; 
+            width: 340px; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 8px;
+            cursor: grab;
+        }
+
+        /* MathField (Input) Styling */
+        math-field {
+            font-size: 1.25rem;
+            background: transparent;
+            outline: none; border: none;
+            user-select: text;
+            cursor: text;
+            padding: 2px;
+        }
+        math-field::part(container) { outline: none; }
+
+        /* Markdown Preview Styling */
+        .md-preview { 
+            user-select: text; 
+            cursor: text;
+            font-family: ui-sans-serif, system-ui, sans-serif;
+            font-size: 0.95rem;
+            color: #334155;
+        }
+        /* Markdown Elements */
+        .md-preview h1 { font-size: 1.4em; font-weight: 700; margin-bottom: 0.5em; color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;}
+        .md-preview h2 { font-size: 1.2em; font-weight: 600; margin-bottom: 0.5em; color: #334155; margin-top: 0.5em;}
+        .md-preview p { margin-bottom: 0.6em; line-height: 1.5; }
+        .md-preview ul { list-style-type: disc; padding-left: 1.2em; margin-bottom: 0.6em; }
+        .md-preview ol { list-style-type: decimal; padding-left: 1.2em; margin-bottom: 0.6em; }
+        .md-preview code { background: #f1f5f9; padding: 2px 4px; border-radius: 4px; font-family: monospace; font-size: 0.9em; color: #db2777; }
+        .md-preview pre { background: #1e293b; padding: 10px; border-radius: 6px; overflow-x: auto; margin-bottom: 0.8em; }
+        .md-preview pre code { background: transparent; color: #f8fafc; }
+        .md-preview blockquote { border-left: 3px solid #cbd5e1; padding-left: 10px; color: #64748b; font-style: italic; }
+
+        /* Markdown Editor Styling */
+        .md-editor {
+            width: 100%; 
+            min-height: 120px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            resize: both;
+            outline: none;
+            user-select: text;
+            cursor: text;
+            background: #f8fafc;
+        }
+        .md-editor:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1); }
+
+        /* Graph Internals */
+        .graph-input-wrapper {
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 4px 8px;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+        }
+        .graph-label { font-size: 0.8rem; font-weight: bold; color: #64748b; margin-right: 6px; }
+        .graph-target { 
+            width: 100%; 
+            height: 220px; 
+            overflow: hidden; 
+            border-radius: 6px; 
+            border: 1px solid #f1f5f9;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden text-slate-800 flex flex-col font-sans">
+
+    <!-- TOP BAR -->
+    <header class="h-14 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm z-20">
+        <div class="flex items-center gap-4">
+            <h1 class="font-bold text-xl text-slate-700 hidden md:block">Math<span class="text-blue-600">Canvas</span></h1>
+            
+            <!-- Mode Selector -->
+            <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+                <button onclick="app.setMode('math')" id="btn-mode-math" class="px-3 py-1.5 rounded-md text-sm font-medium transition bg-white shadow-sm text-blue-600 ring-1 ring-black/5">
+                    ∑ Math
+                </button>
+                <button onclick="app.setMode('text')" id="btn-mode-text" class="px-3 py-1.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-white/60">
+                    Aa Text
+                </button>
+                <button onclick="app.setMode('graph')" id="btn-mode-graph" class="px-3 py-1.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-white/60">
+                    📈 Graph
+                </button>
+				<button onclick="document.getElementById('img-upload').click()" class="px-3 py-1.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-slate-50 ml-2">
+					🖼️ Image
+				</button>
+				<input type="file" id="img-upload" accept="image/*" class="hidden" onchange="app.addImage(this)">
+            </div>
+
+            <div class="h-5 w-px bg-slate-300"></div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+                <button onclick="app.undo()" class="px-2 py-1 hover:bg-slate-100 rounded text-sm text-slate-600 transition">↩ Undo</button>
+                <button onclick="app.saveJSON()" class="px-2 py-1 hover:bg-slate-100 rounded text-sm text-slate-600 transition">🛫 Export</button>
+                <label class="px-2 py-1 hover:bg-slate-100 rounded text-sm text-slate-600 transition cursor-pointer">
+                    🛬 Import <input type="file" accept=".json" class="hidden" onchange="app.loadJSON(this)">
+                </label>
+				<button onclick="app.manualSave()" class="px-2 py-1 hover:bg-slate-100 rounded text-sm text-slate-600 transition">💾 Save</button>
+            </div>
+        </div>
+        
+        <div class="text-xs text-slate-400 hidden lg:flex gap-4">
+            <span>Double-click to add node.</span>
+            <span><b>$..$</b> for inline math, <b>$$..$$</b> for blocks.</span>
+            <button onclick="app.clearCanvas()" class="text-red-400 hover:text-red-600 font-semibold hover:underline">Clear Canvas</button>
+        </div>
+    </header>
+
+    <!-- CANVAS -->
+    <main id="canvas-container" class="flex-1 relative overflow-hidden w-full h-full">
+        <div id="canvas-world" class="absolute top-0 left-0 w-full h-full origin-top-left will-change-transform"></div>
+        
+        <!-- Zoom Controls -->
+        <div class="absolute bottom-5 right-5 flex flex-col bg-white shadow-lg rounded-lg border border-slate-200 z-30 overflow-hidden">
+            <button onclick="app.zoomIn()" class="p-3 hover:bg-slate-50 active:bg-slate-100 border-b border-slate-100 text-slate-600">+</button>
+            <button id="zoom-indicator" onclick="app.resetView()" class="p-2 hover:bg-slate-50 text-xs font-bold text-slate-500">100%</button>
+            <button onclick="app.zoomOut()" class="p-3 hover:bg-slate-50 active:bg-slate-100 border-t border-slate-100 text-slate-600">-</button>
+        </div>
+    </main>
+
+    <script>
+        /**
+         * MARKDOWN + LATEX RENDERER
+         * Protects LaTeX from markdown parser, runs marked, then runs KaTeX.
+         */
+        const mdRenderer = (rawText) => {
+            if(!rawText) return '';
+            
+            const mathBlocks = [];
+            
+            // 1. Extract Math to alphanumeric placeholders (NO underscores/symbols that trigger markdown)
+            // Matches $$...$$ or $...$ 
+            const protectedText = rawText.replace(/\$\$([\s\S]+?)\$\$|\$((?!\$)[\s\S]+?)\$/g, (match, blockTex, inlineTex) => {
+                const tex = blockTex || inlineTex;
+                const isBlock = !!blockTex;
+                const id = mathBlocks.length;
+                mathBlocks.push({ id, tex, isBlock });
+                // A pure alpha string token to survive markdown parsing safely
+                return `MATHBLOCK${id}ENDMATHBLOCK`; 
+            });
+
+            // 2. Parse Markdown
+            let html = marked.parse(protectedText);
+
+            // 3. Restore Math and Render with KaTeX
+            mathBlocks.forEach(item => {
+                const placeholder = `MATHBLOCK${item.id}ENDMATHBLOCK`;
+                try {
+                    const rendered = katex.renderToString(item.tex, {
+                        displayMode: item.isBlock,
+                        throwOnError: false,
+                        output: 'html'
+                    });
+                    // Use split/join for global replacement of the token
+                    html = html.split(placeholder).join(rendered); 
+                } catch (e) {
+                    html = html.split(placeholder).join(`<span class="text-red-500 bg-red-50 px-1 rounded">Math Error</span>`);
+                }
+            });
+
+            return html;
+        };
+
+        /**
+         * APP LOGIC
+         */
+        const app = (() => {
+            const container = document.getElementById('canvas-container');
+            const world = document.getElementById('canvas-world');
+
+            let state = {
+                scale: 1,
+                pan: { x: 0, y: 0 },
+                mode: 'math', // math | text | graph
+                fields: [],   
+                zIndexCounter: 1
+            };
+
+            let interaction = {
+                isDraggingCanvas: false,
+                isDraggingNode: false,
+                startPos: { x: 0, y: 0 },
+                panStart: { x: 0, y: 0 },
+                selectedId: null,
+                activeInput: null
+            };
+
+            // --- Init ---
+            function init() {
+                setupEvents();
+                loadFromStorage();
+                updateTransform(); // Fixed ReferenceError
+                setInterval(saveToStorage, 60000);
+            }
+
+            // --- Mode Switching ---
+            function setMode(mode) {
+                state.mode = mode;
+                ['math','text','graph'].forEach(m => {
+                    const btn = document.getElementById(`btn-mode-${m}`);
+                    const isActive = mode === m;
+                    btn.className = isActive 
+                        ? "px-3 py-1.5 rounded-md text-sm font-medium transition bg-white shadow-sm text-blue-600 ring-1 ring-black/5"
+                        : "px-3 py-1.5 rounded-md text-sm font-medium transition text-slate-600 hover:bg-white/60";
+                });
+            }
+
+            // --- Canvas View ---
+			function updateTransform() {
+				world.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.scale})`;
+				
+				// Grid Updates
+				const s = 40 * state.scale;
+				container.style.backgroundSize = `${s}px ${s}px`;
+				container.style.backgroundPosition = `${state.pan.x}px ${state.pan.y}px`;
+
+				// [NEW] Update Zoom Indicator Text
+				const percent = Math.round(state.scale * 100);
+				const indicator = document.getElementById('zoom-indicator');
+				if(indicator) indicator.innerText = percent + '%';
+			}
+
+            function screenToWorld(x, y) {
+                return {
+                    x: (x - state.pan.x) / state.scale,
+                    y: (y - state.pan.y) / state.scale
+                };
+            }
+
+            // --- Node Factory ---
+            function createNode(x, y, type = state.mode, content = "") {
+                const id = `node-${Date.now()}-${Math.random().toString(36).substr(2,5)}`;
+                
+                // Default contents
+                if (!content) {
+                    if (type === 'text') content = "Double click to edit.\n\nSupports **Markdown** and $LaTeX$ math like $E=mc^2$.";
+                    if (type === 'graph') content = "x^2"; 
+                }
+
+                const nodeData = {
+                    id, x, y, type, content,
+                    zIndex: ++state.zIndexCounter
+                };
+
+                state.fields.push(nodeData);
+                renderNode(nodeData);
+                selectNode(id);
+            }
+
+            function renderNode(data) {
+                const div = document.createElement('div');
+                div.id = data.id;
+                div.style.left = `${data.x}px`;
+                div.style.top = `${data.y}px`;
+                div.style.zIndex = data.zIndex;
+                
+                // Mouse Down on the box (Drag Logic)
+                div.addEventListener('mousedown', (e) => {
+                    selectNode(data.id);
+                    
+                    // Check if we clicked an interactive child
+                    const targetTag = e.target.tagName.toLowerCase();
+                    const interactiveTags = ['input','textarea','math-field','button'];
+                    
+                    // Also check if we are inside the math-field (which has shadow dom) or editors
+                    if (interactiveTags.includes(targetTag) || e.target.closest('.md-editor')) {
+                        // Do not drag
+                        return;
+                    }
+                    
+                    // FunctionPlot captures events, but let's ensure we can drag the card from headers/padding
+                    if (e.target.closest('.graph-target')) return;
+
+                    interaction.isDraggingNode = true;
+                    interaction.selectedId = data.id;
+                    div.classList.add('dragging');
+                    e.preventDefault(); // Prevent text select on container
+                    e.stopPropagation(); // Prevent canvas pan
+                });
+
+                // 1. Math Node
+                if (data.type === 'math') {
+                    div.className = 'node node-math';
+                    const mf = document.createElement('math-field');
+                    mf.value = data.content;
+                    mf.virtualKeyboardMode = "manual";
+                    
+                    mf.addEventListener('input', () => { data.content = mf.value; });
+                    mf.addEventListener('focus', () => { interaction.activeInput = mf; selectNode(data.id); });
+                    
+                    // Handle Enter for multiline
+                    mf.addEventListener('keydown', (e) => {
+                        if(e.key === 'Enter') { 
+                            e.preventDefault(); e.stopPropagation(); 
+                            mf.executeCommand(['insert','\\\\']); 
+                        }
+                    });
+                    div.appendChild(mf);
+                } 
+                // 2. Text Node
+                else if (data.type === 'text') {
+                    div.className = 'node node-text';
+                    
+                    const preview = document.createElement('div');
+                    preview.className = 'md-preview';
+                    preview.innerHTML = mdRenderer(data.content);
+                    
+                    const textarea = document.createElement('textarea');
+                    textarea.className = 'md-editor hidden';
+                    textarea.value = data.content;
+
+                    // Toggle Edit
+                    div.addEventListener('dblclick', (e) => {
+                        e.stopPropagation();
+                        preview.classList.add('hidden');
+                        textarea.classList.remove('hidden');
+                        textarea.focus();
+                        interaction.activeInput = textarea;
+                        div.style.cursor = 'auto';
+                    });
+
+                    // Save & Render
+                    textarea.addEventListener('blur', () => {
+                        data.content = textarea.value;
+                        preview.innerHTML = mdRenderer(data.content);
+                        textarea.classList.add('hidden');
+                        preview.classList.remove('hidden');
+                        interaction.activeInput = null;
+                        div.style.cursor = 'grab';
+                    });
+                    
+                    // Stop propagation in textarea so we can select text
+                    textarea.addEventListener('mousedown', e => e.stopPropagation());
+
+                    div.appendChild(preview);
+                    div.appendChild(textarea);
+                }
+				
+				// 3. Graph Node
+                else if (data.type === 'graph') {
+                    div.className = 'node node-graph';
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'graph-input-wrapper';
+                    
+                    const label = document.createElement('span');
+                    label.className = 'graph-label';
+                    label.innerHTML = "f(x)=";
+                    
+                    const mf = document.createElement('math-field');
+                    mf.style.flex = "1";
+                    mf.style.fontSize = "1rem";
+                    mf.value = data.content;
+                    mf.virtualKeyboardMode = "manual";
+                    
+                    const graphId = `g-${data.id}`;
+                    const graphDiv = document.createElement('div');
+                    graphDiv.id = graphId;
+                    graphDiv.className = 'graph-target';
+
+                    const updateGraph = (val) => {
+                        try {
+                            // Basic cleanup for function-plot parser
+                            let fn = val
+                                .replace(/\\cdot/g, '*')
+                                .replace(/\\left/g, '')
+                                .replace(/\\right/g, '')
+                                .replace(/\\sin/g, 'sin').replace(/\\cos/g, 'cos').replace(/\\tan/g, 'tan')
+                                .replace(/\\ln/g, 'log').replace(/\\log/g, 'log')
+                                .replace(/\\pi/g, 'PI')
+                                .replace(/\\sqrt\{([^}]+)\}/g, 'sqrt($1)')
+                                .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1)/($2)')
+                                .replace(/\{/g, '(').replace(/\}/g, ')')
+                                .replace(/\\/g, '');
+
+                            functionPlot({
+                                target: `#${graphId}`,
+                                width: 316, 
+                                height: 220,
+                                grid: true,
+                                tip: { xLine: true, yLine: true },
+                                data: [{ fn: fn, color: '#3b82f6' }]
+                            });
+                        } catch(e) {}
+                    };
+
+                    mf.addEventListener('input', () => {
+                        data.content = mf.value;
+                        updateGraph(mf.value);
+                    });
+
+                    mf.addEventListener('mousedown', e => e.stopPropagation());
+                    graphDiv.addEventListener('mousedown', e => e.stopPropagation());
+
+                    wrapper.appendChild(label);
+                    wrapper.appendChild(mf);
+                    div.appendChild(wrapper);
+                    div.appendChild(graphDiv);
+
+                    setTimeout(() => updateGraph(data.content), 100);
+                }
+				
+				// 4. Image Node
+				else if (data.type === 'image') {
+					div.className = 'node p-2'; // Simple container
+					const img = document.createElement('img');
+					img.src = data.content; // The Base64 string
+					img.className = 'rounded max-w-[300px] max-h-[300px] pointer-events-none'; 
+					// pointer-events-none ensures you drag the node, not the browser's "ghost image"
+					div.appendChild(img);
+				}
+
+                world.appendChild(div);
+            }
+
+            function removeNode(id) {
+                state.fields = state.fields.filter(f => f.id !== id);
+                const el = document.getElementById(id);
+                if (el) el.remove();
+                interaction.selectedId = null;
+            }
+
+            function selectNode(id) {
+                document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+                if (id) {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.classList.add('selected');
+                        el.style.zIndex = ++state.zIndexCounter;
+                        const d = state.fields.find(f => f.id === id);
+                        if(d) d.zIndex = state.zIndexCounter;
+                    }
+                    interaction.selectedId = id;
+                } else {
+                    interaction.selectedId = null;
+                }
+            }
+
+            // --- Event Setup ---
+            function setupEvents() {
+                // Panning
+                container.addEventListener('mousedown', (e) => {
+                    if (e.target === container || e.target === world) {
+                        interaction.isDraggingCanvas = true;
+                        interaction.startPos = { x: e.clientX, y: e.clientY };
+                        interaction.panStart = { ...state.pan };
+                        container.style.cursor = 'grabbing';
+                        selectNode(null);
+                        if (document.activeElement) document.activeElement.blur();
+                    }
+                });
+
+                window.addEventListener('mousemove', (e) => {
+                    // Pan Canvas
+                    if (interaction.isDraggingCanvas) {
+                        const dx = e.clientX - interaction.startPos.x;
+                        const dy = e.clientY - interaction.startPos.y;
+                        state.pan.x = interaction.panStart.x + dx;
+                        state.pan.y = interaction.panStart.y + dy;
+                        updateTransform();
+                    }
+                    // Drag Node
+                    if (interaction.isDraggingNode && interaction.selectedId) {
+                        const nodeData = state.fields.find(f => f.id === interaction.selectedId);
+                        if (nodeData) {
+                            const dx = e.movementX / state.scale;
+                            const dy = e.movementY / state.scale;
+                            nodeData.x += dx;
+                            nodeData.y += dy;
+                            const el = document.getElementById(interaction.selectedId);
+                            el.style.left = `${nodeData.x}px`;
+                            el.style.top = `${nodeData.y}px`;
+                        }
+                    }
+                });
+
+                window.addEventListener('mouseup', () => {
+                    interaction.isDraggingCanvas = false;
+                    interaction.isDraggingNode = false;
+                    container.style.cursor = 'crosshair';
+                    document.querySelectorAll('.node').forEach(n => n.classList.remove('dragging'));
+                });
+
+                // Zoom
+                container.addEventListener('wheel', (e) => {
+                    if(e.target.tagName === 'TEXTAREA') return;
+                    e.preventDefault();
+                    const factor = Math.exp((e.deltaY < 0 ? 1 : -1) * 0.1);
+                    const newScale = Math.min(5, Math.max(0.1, state.scale * factor));
+                    
+                    const rect = container.getBoundingClientRect();
+                    const mx = e.clientX - rect.left;
+                    const my = e.clientY - rect.top;
+                    const wx = (mx - state.pan.x) / state.scale;
+                    const wy = (my - state.pan.y) / state.scale;
+
+                    state.pan.x = mx - wx * newScale;
+                    state.pan.y = my - wy * newScale;
+                    state.scale = newScale;
+                    updateTransform();
+                }, { passive: false });
+
+                // Double Click
+                container.addEventListener('dblclick', (e) => {
+                    if (e.target === container || e.target === world) {
+                        const rect = container.getBoundingClientRect();
+                        const pos = screenToWorld(e.clientX - rect.left, e.clientY - rect.top);
+                        createNode(pos.x, pos.y);
+                    }
+                });
+
+                // Keyboard
+                window.addEventListener('keydown', (e) => {
+                    // Delete
+                    if (e.key === 'Delete') {
+                        const tag = document.activeElement.tagName.toLowerCase();
+                        if (tag !== 'input' && tag !== 'textarea' && tag !== 'math-field') {
+                            if(interaction.selectedId) removeNode(interaction.selectedId);
+                        }
+                    }
+                    // Duplicate
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                        e.preventDefault();
+                        if(interaction.selectedId) {
+                            const orig = state.fields.find(f => f.id === interaction.selectedId);
+                            if(orig) createNode(orig.x + 30, orig.y + 30, orig.type, orig.content);
+                        }
+                    }
+                    // Escape
+                    if (e.key === 'Escape') {
+                        selectNode(null);
+                        if (document.activeElement) document.activeElement.blur();
+                        document.querySelectorAll('.md-editor:not(.hidden)').forEach(el => el.blur());
+                    }
+                });
+            }
+
+            // --- Persistence ---
+            function saveToStorage() {
+                const data = JSON.stringify({ 
+                    pan: state.pan, scale: state.scale, 
+                    fields: state.fields, zIndexCounter: state.zIndexCounter 
+                });
+                localStorage.setItem('math_canvas_v3', data);
+            }
+
+            function loadFromStorage() {
+                const s = localStorage.getItem('math_canvas_v3');
+                if (s) {
+                    try {
+                        const d = JSON.parse(s);
+                        state.pan = d.pan || {x:0,y:0};
+                        state.scale = d.scale || 1;
+                        state.zIndexCounter = d.zIndexCounter || 1;
+                        world.innerHTML = '';
+                        state.fields = d.fields || [];
+                        state.fields.forEach(f => renderNode(f));
+                    } catch(e) { console.error(e); }
+                }
+            }
+
+            function saveJSON() {
+                const blob = new Blob([JSON.stringify({version:3, ...state}, null, 2)], {type:"application/json"});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `math-canvas-${Date.now()}.json`;
+                a.click();
+            }
+
+            function loadJSON(input) {
+                const f = input.files[0];
+                if(!f) return;
+                const r = new FileReader();
+                r.onload = (e) => {
+                    try {
+                        const d = JSON.parse(e.target.result);
+                        localStorage.setItem('math_canvas_v3', JSON.stringify(d));
+                        location.reload();
+                    } catch(err) { alert("Invalid JSON"); }
+                };
+                r.readAsText(f);
+            }
+
+            function clearCanvas() {
+                if(confirm("Clear entire canvas?")) {
+                    state.fields=[]; world.innerHTML=''; 
+                    state.pan={x:0,y:0}; state.scale=1; 
+                    updateTransform(); saveToStorage();
+                }
+            }
+
+            return { 
+                init, setMode, 
+                zoomIn:()=> {state.scale*=1.2;updateTransform()}, 
+                zoomOut:()=>{state.scale/=1.2;updateTransform()}, 
+                resetView:()=>{state.scale=1;state.pan={x:0,y:0};updateTransform()}, 
+                undo:()=>document.execCommand('undo'), 
+				manualSave: () => {
+						saveToStorage();
+						// Optional: Visual feedback
+						const btn = document.activeElement;
+						const originalText = btn.innerText;
+						btn.innerText = "Saved!";
+						setTimeout(() => btn.innerText = originalText, 1000);
+					},
+				addImage: (input) => {
+						const file = input.files[0];
+						if (!file) return;
+						
+						const reader = new FileReader();
+						// When file is read, create the node
+						reader.onload = (e) => {
+							 // Get center of screen (approx) to drop image
+							 const cx = -state.pan.x / state.scale + 100;
+							 const cy = -state.pan.y / state.scale + 100;
+							 createNode(cx, cy, 'image', e.target.result);
+						};
+						reader.readAsDataURL(file); // Start reading
+						input.value = ''; // Reset input so you can upload same file twice
+					},
+                saveJSON, loadJSON, clearCanvas 
+            };
+        })();
+
+        document.addEventListener('DOMContentLoaded', app.init);
+    </script>
+</body>
+</html>
